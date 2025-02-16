@@ -1,109 +1,340 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  useColorScheme,
+  ActivityIndicator,
+} from "react-native";
+import { styled } from "nativewind";
+import { FontAwesome } from "@expo/vector-icons";
+import { useSavedRecipes } from "@/src/context/SavedRecipesContext";
+import RecipeDetailModal from "@/src/components/RecipeDetailModal";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+const StyledView = styled(View);
+const StyledText = styled(Text);
+const StyledTextInput = styled(TextInput);
+const StyledTouchableOpacity = styled(TouchableOpacity);
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
-  );
+interface Recipe {
+  idMeal: string;
+  strMeal: string;
+  strMealThumb: string;
+  strCategory: string;
+  strArea: string;
 }
 
-const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-});
+interface RecipeDetail extends Recipe {
+  strInstructions: string;
+  strIngredient1?: string;
+  strIngredient2?: string;
+  // ... up to strIngredient20
+  strMeasure1?: string;
+  strMeasure2?: string;
+  // ... up to strMeasure20
+}
+
+export default function ExploreScreen() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [trendingRecipes, setTrendingRecipes] = useState<Recipe[]>([]);
+  const [searchResults, setSearchResults] = useState<Recipe[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeDetail | null>(
+    null
+  );
+  const [error, setError] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const { saveRecipe, removeRecipe, isSaved } = useSavedRecipes();
+
+  useEffect(() => {
+    fetchTrendingRecipes();
+  }, []);
+
+  const fetchTrendingRecipes = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch 10 random recipes for trending section
+      const response = await fetch(
+        "https://www.themealdb.com/api/json/v1/1/random.php"
+      );
+      const data = await response.json();
+
+      // Since we need multiple recipes, let's make multiple requests
+      const recipes = await Promise.all(
+        Array(10)
+          .fill(0)
+          .map(async () => {
+            const res = await fetch(
+              "https://www.themealdb.com/api/json/v1/1/random.php"
+            );
+            const data = await res.json();
+            return data.meals[0];
+          })
+      );
+
+      setTrendingRecipes(recipes);
+    } catch (err) {
+      console.error("Error fetching trending recipes:", err);
+      setError("Failed to fetch trending recipes");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const searchRecipes = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `https://www.themealdb.com/api/json/v1/1/search.php?s=${query}`
+      );
+      const data = await response.json();
+      setSearchResults(data.meals || []);
+    } catch (err) {
+      console.error("Error searching recipes:", err);
+      setError("Failed to search recipes");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRecipePress = async (recipe: Recipe) => {
+    try {
+      const response = await fetch(
+        `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${recipe.idMeal}`
+      );
+      const data = await response.json();
+      setSelectedRecipe(data.meals[0]);
+    } catch (err) {
+      console.error("Error fetching recipe details:", err);
+    }
+  };
+
+  const handleSaveRecipe = (recipe: Recipe) => {
+    if (isSaved(Number(recipe.idMeal))) {
+      removeRecipe(Number(recipe.idMeal));
+    } else {
+      saveRecipe({
+        id: Number(recipe.idMeal),
+        title: recipe.strMeal,
+        image: recipe.strMealThumb,
+      });
+    }
+  };
+
+  const RecipeCard = ({ recipe }: { recipe: Recipe }) => (
+    <StyledTouchableOpacity
+      className={`rounded-lg overflow-hidden border mb-4 ${
+        isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+      }`}
+      onPress={() => handleRecipePress(recipe)}
+    >
+      <Image
+        source={{ uri: recipe.strMealThumb }}
+        className="w-full h-48"
+        resizeMode="cover"
+      />
+      <StyledView className="p-4">
+        <StyledView className="flex-row justify-between items-start">
+          <StyledText
+            className={`text-lg font-semibold flex-1 mr-2 ${
+              isDark ? "text-white" : "text-gray-800"
+            }`}
+          >
+            {recipe.strMeal}
+          </StyledText>
+          <StyledTouchableOpacity
+            onPress={() => handleSaveRecipe(recipe)}
+            className="p-2"
+          >
+            <FontAwesome
+              name={isSaved(Number(recipe.idMeal)) ? "bookmark" : "bookmark-o"}
+              size={24}
+              color={isDark ? "#3B82F6" : "#2563eb"}
+            />
+          </StyledTouchableOpacity>
+        </StyledView>
+        <StyledView className="flex-row flex-wrap gap-2 mt-2">
+          <StyledView
+            className={`rounded-full px-2 py-1 ${
+              isDark ? "bg-gray-700" : "bg-gray-100"
+            }`}
+          >
+            <StyledText
+              className={`text-sm ${
+                isDark ? "text-gray-200" : "text-gray-800"
+              }`}
+            >
+              {recipe.strCategory}
+            </StyledText>
+          </StyledView>
+          <StyledView
+            className={`rounded-full px-2 py-1 ${
+              isDark ? "bg-gray-700" : "bg-gray-100"
+            }`}
+          >
+            <StyledText
+              className={`text-sm ${
+                isDark ? "text-gray-200" : "text-gray-800"
+              }`}
+            >
+              {recipe.strArea}
+            </StyledText>
+          </StyledView>
+        </StyledView>
+      </StyledView>
+    </StyledTouchableOpacity>
+  );
+
+  return (
+    <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+      <StyledView className="p-4">
+        {/* Search Bar */}
+        <StyledView className="mb-6">
+          <StyledTextInput
+            className={`rounded-lg px-4 py-3 ${
+              isDark
+                ? "bg-gray-800 text-white border-gray-700"
+                : "bg-white text-gray-900 border-gray-300"
+            } border`}
+            placeholder="Search recipes..."
+            placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              searchRecipes(text);
+            }}
+          />
+        </StyledView>
+
+        {/* Loading State */}
+        {isLoading && (
+          <StyledView className="items-center py-8">
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <StyledText
+              className={`mt-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            >
+              Loading recipes...
+            </StyledText>
+          </StyledView>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <StyledView className="items-center py-8">
+            <FontAwesome
+              name="exclamation-circle"
+              size={48}
+              color={isDark ? "#EF4444" : "#DC2626"}
+            />
+            <StyledText
+              className={`mt-4 text-lg text-center ${
+                isDark ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              {error}
+            </StyledText>
+          </StyledView>
+        )}
+
+        {/* Search Results */}
+        {searchQuery && !isLoading && (
+          <>
+            <StyledText
+              className={`text-xl font-bold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}
+            >
+              Search Results
+            </StyledText>
+            {searchResults.length > 0 ? (
+              searchResults.map((recipe) => (
+                <RecipeCard key={recipe.idMeal} recipe={recipe} />
+              ))
+            ) : (
+              <StyledText
+                className={`text-center py-4 ${
+                  isDark ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
+                No recipes found
+              </StyledText>
+            )}
+          </>
+        )}
+
+        {/* Trending Recipes */}
+        {!searchQuery && (
+          <>
+            <StyledText
+              className={`text-xl font-bold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}
+            >
+              Trending Now
+            </StyledText>
+            {trendingRecipes.map((recipe) => (
+              <RecipeCard key={recipe.idMeal} recipe={recipe} />
+            ))}
+          </>
+        )}
+      </StyledView>
+
+      {/* Recipe Detail Modal */}
+      <RecipeDetailModal
+        recipe={
+          selectedRecipe
+            ? {
+                id: Number(selectedRecipe.idMeal),
+                title: selectedRecipe.strMeal,
+                image: selectedRecipe.strMealThumb,
+                instructions: selectedRecipe.strInstructions,
+                extendedIngredients: Array.from({ length: 20 })
+                  .map((_, i) => {
+                    const ingredient = selectedRecipe[`strIngredient${i + 1}`];
+                    const measure = selectedRecipe[`strMeasure${i + 1}`];
+                    if (ingredient && ingredient.trim()) {
+                      return {
+                        id: i,
+                        originalName: ingredient,
+                        amount: 1,
+                        unit: measure || "",
+                      };
+                    }
+                    return null;
+                  })
+                  .filter(Boolean),
+                analyzedInstructions: [
+                  {
+                    steps: selectedRecipe.strInstructions
+                      .split(/\r\n|\n|\r/)
+                      .filter((step) => step.trim())
+                      .map((step, index) => ({
+                        number: index + 1,
+                        step: step.trim(),
+                        ingredients: [],
+                      })),
+                  },
+                ],
+                servings: 4,
+                readyInMinutes: 30,
+                cuisines: [selectedRecipe.strArea],
+                dishTypes: [selectedRecipe.strCategory],
+                diets: [],
+              }
+            : null
+        }
+        visible={!!selectedRecipe}
+        onClose={() => setSelectedRecipe(null)}
+      />
+    </ScrollView>
+  );
+}
