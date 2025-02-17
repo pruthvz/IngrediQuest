@@ -9,16 +9,21 @@ import {
   useColorScheme,
   ActivityIndicator,
   GestureResponderEvent,
+  SafeAreaView,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { styled } from "nativewind";
 import { FontAwesome } from "@expo/vector-icons";
 import RecipeDetailModal from "../../src/components/RecipeDetailModal";
 import { useSavedRecipes } from "../../src/context/SavedRecipesContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTextInput = styled(TextInput);
 const StyledTouchableOpacity = styled(TouchableOpacity);
+const StyledSafeAreaView = styled(SafeAreaView);
 
 interface Recipe {
   id: number;
@@ -173,205 +178,250 @@ export default function HomeScreen() {
   };
 
   return (
-    <>
-      <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
-        <StyledView className="p-4">
-          {/* Header */}
-          <StyledView className="mb-6">
-            <StyledText
-              className={`text-3xl font-bold mb-2 ${
-                isDark ? "text-white" : "text-gray-800"
-              }`}
-            >
-              What can I cook?
-            </StyledText>
-            <StyledText
-              className={`${isDark ? "text-gray-300" : "text-gray-600"}`}
-            >
-              Add ingredients to find matching recipes
-            </StyledText>
-          </StyledView>
-
-          {/* Ingredient Input */}
-          <StyledView className="flex-row items-center mb-4">
-            <StyledTextInput
-              className={`flex-1 rounded-lg px-4 py-3 mr-2 ${
-                isDark
-                  ? "bg-gray-800 text-white border-gray-700"
-                  : "bg-white text-gray-900 border-gray-300"
-              } border`}
-              placeholder="Add an ingredient..."
-              placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
-              value={inputValue}
-              onChangeText={setInputValue}
-              onSubmitEditing={addIngredient}
-            />
-            <StyledTouchableOpacity
-              className="bg-primary-600 px-4 py-3 rounded-lg"
-              onPress={addIngredient}
-            >
-              <FontAwesome name="plus" size={20} color="white" />
-            </StyledTouchableOpacity>
-          </StyledView>
-
-          {/* Ingredients Tags */}
-          {ingredients.length > 0 && (
-            <StyledView className="flex-row flex-wrap gap-2 mb-6">
-              {ingredients.map((ingredient) => (
-                <StyledTouchableOpacity
-                  key={ingredient.id}
-                  onPress={() => removeIngredient(ingredient.id)}
-                  className={`flex-row items-center rounded-full px-3 py-2 ${
-                    isDark ? "bg-gray-800" : "bg-gray-100"
+    <StyledSafeAreaView
+      className={`flex-1 ${isDark ? "bg-gray-900" : "bg-white"}`}
+      style={{
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+      }}
+    >
+      <ScrollView className="flex-1">
+        {/* Hero Section */}
+        <LinearGradient
+          colors={isDark ? ["#1F2937", "#111827"] : ["#EEF2FF", "#E0E7FF"]}
+          className="pt-4 pb-8"
+        >
+          <StyledView className="px-6">
+            <StyledView className="mb-8 mt-8">
+              <StyledView className="flex-row items-center mb-2">
+                <FontAwesome
+                  name="cutlery"
+                  size={28}
+                  color={isDark ? "#60A5FA" : "#3B82F6"}
+                  style={{ marginRight: 12 }}
+                />
+                <StyledText
+                  className={`text-4xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
                   }`}
                 >
-                  <StyledText
-                    className={`mr-2 ${
-                      isDark ? "text-gray-200" : "text-gray-800"
-                    }`}
-                  >
-                    {ingredient.name}
-                  </StyledText>
-                  <FontAwesome
-                    name="times-circle"
-                    size={16}
-                    color={isDark ? "#9CA3AF" : "#4B5563"}
-                  />
-                </StyledTouchableOpacity>
-              ))}
-            </StyledView>
-          )}
-
-          {/* Loading State */}
-          {isLoading && (
-            <StyledView className="items-center py-8">
-              <ActivityIndicator size="large" color="#3B82F6" />
+                  What ingredients do you have?
+                </StyledText>
+              </StyledView>
               <StyledText
-                className={`mt-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}
-              >
-                Finding recipes...
-              </StyledText>
-            </StyledView>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <StyledView className="items-center py-8">
-              <FontAwesome
-                name="exclamation-circle"
-                size={48}
-                color={isDark ? "#EF4444" : "#DC2626"}
-              />
-              <StyledText
-                className={`mt-4 text-lg text-center ${
+                className={`text-lg ${
                   isDark ? "text-gray-300" : "text-gray-600"
                 }`}
               >
-                {error}
+                Transform your ingredients into amazing dishes
               </StyledText>
             </StyledView>
-          )}
 
-          {/* Recipe List */}
-          {!isLoading && !error && (
-            <StyledView className="space-y-4">
-              {recipes.length === 0 ? (
-                <StyledView className="items-center py-8">
-                  <FontAwesome
-                    name="cutlery"
-                    size={48}
-                    color={isDark ? "#4B5563" : "#9CA3AF"}
-                  />
-                  <StyledText
-                    className={`mt-4 text-lg text-center ${
-                      isDark ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    {ingredients.length === 0
-                      ? "Add ingredients to see matching recipes"
-                      : "No recipes found with these ingredients"}
-                  </StyledText>
-                </StyledView>
-              ) : (
-                recipes.map((recipe) => (
+            {/* Quick Categories */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="mb-6 -mx-2"
+            >
+              {["Breakfast", "Lunch", "Dinner", "Snacks", "Desserts"].map(
+                (category) => (
                   <StyledTouchableOpacity
-                    key={recipe.id}
-                    className={`rounded-lg overflow-hidden border ${
+                    key={category}
+                    className={`mr-3 px-4 py-2 rounded-full border ${
                       isDark
-                        ? "bg-gray-800 border-gray-700"
-                        : "bg-white border-gray-200"
+                        ? "border-gray-700 bg-gray-800/50"
+                        : "border-indigo-100 bg-white"
                     }`}
-                    onPress={() => handleRecipeClick(recipe)}
                   >
-                    <Image
-                      source={{ uri: recipe.image }}
-                      className="w-full h-48"
-                      resizeMode="cover"
+                    <StyledText
+                      className={isDark ? "text-gray-300" : "text-gray-600"}
+                    >
+                      {category}
+                    </StyledText>
+                  </StyledTouchableOpacity>
+                )
+              )}
+            </ScrollView>
+
+            {/* Ingredient Input */}
+            <StyledView className="relative">
+              <StyledView
+                className={`absolute -top-3 left-4 px-2 z-10 ${
+                  isDark ? "bg-gray-800" : "bg-white"
+                }`}
+              >
+                <StyledText
+                  className={`text-sm ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  Add Your Ingredients
+                </StyledText>
+              </StyledView>
+              <StyledView className="flex-row items-center">
+                <StyledView
+                  className={`flex-1 rounded-2xl border-2 ${
+                    isDark
+                      ? "bg-gray-800/50 border-gray-700"
+                      : "bg-white border-indigo-100"
+                  }`}
+                >
+                  <StyledTextInput
+                    className={`pl-11 pr-4 py-4 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                    placeholder="e.g. chicken, rice, tomatoes..."
+                    placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
+                    value={inputValue}
+                    onChangeText={setInputValue}
+                    onSubmitEditing={addIngredient}
+                  />
+                  <FontAwesome
+                    name="search"
+                    size={16}
+                    color={isDark ? "#60A5FA" : "#3B82F6"}
+                    style={{ position: "absolute", left: 16, top: 18 }}
+                  />
+                </StyledView>
+                <StyledTouchableOpacity
+                  className={`ml-3 p-4 rounded-xl ${
+                    isDark ? "bg-blue-500" : "bg-blue-600"
+                  } shadow-lg`}
+                  onPress={addIngredient}
+                >
+                  <FontAwesome name="plus" size={20} color="white" />
+                </StyledTouchableOpacity>
+              </StyledView>
+            </StyledView>
+
+            {/* Ingredients Tags */}
+            {ingredients.length > 0 && (
+              <StyledView className="flex-row flex-wrap gap-2 mt-4">
+                {ingredients.map((ingredient) => (
+                  <StyledTouchableOpacity
+                    key={ingredient.id}
+                    onPress={() => removeIngredient(ingredient.id)}
+                    className={`flex-row items-center rounded-full px-4 py-2.5 ${
+                      isDark
+                        ? "bg-gray-800/80 border-gray-700"
+                        : "bg-white border-indigo-100"
+                    } border shadow-sm`}
+                  >
+                    <FontAwesome
+                      name="tag"
+                      size={12}
+                      color={isDark ? "#60A5FA" : "#3B82F6"}
+                      style={{ marginRight: 8 }}
                     />
-                    <StyledView className="p-4">
-                      <StyledView className="flex-row justify-between items-start">
-                        <StyledText
-                          className={`text-lg font-semibold flex-1 mr-2 ${
-                            isDark ? "text-white" : "text-gray-800"
-                          }`}
-                        >
+                    <StyledText
+                      className={`mr-2 ${
+                        isDark ? "text-gray-200" : "text-gray-800"
+                      }`}
+                    >
+                      {ingredient.name}
+                    </StyledText>
+                    <FontAwesome
+                      name="times-circle"
+                      size={16}
+                      color={isDark ? "#9CA3AF" : "#4B5563"}
+                    />
+                  </StyledTouchableOpacity>
+                ))}
+              </StyledView>
+            )}
+          </StyledView>
+        </LinearGradient>
+
+        {/* Loading State */}
+        {isLoading && (
+          <StyledView className="items-center py-8">
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <StyledText
+              className={`mt-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}
+            >
+              Finding recipes...
+            </StyledText>
+          </StyledView>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <StyledView className="m-4 p-4 bg-red-50 rounded-xl border border-red-200">
+            <StyledText className="text-red-600 text-center">
+              {error}
+            </StyledText>
+          </StyledView>
+        )}
+
+        {/* Recipe List */}
+        {recipes.length > 0 && (
+          <StyledView className="p-4">
+            <StyledText
+              className={`text-xl font-semibold mb-4 ${
+                isDark ? "text-white" : "text-gray-800"
+              }`}
+            >
+              Recipes Found ({recipes.length})
+            </StyledText>
+            <StyledView className="space-y-4">
+              {recipes.map((recipe) => (
+                <StyledTouchableOpacity
+                  key={recipe.id}
+                  className={`rounded-xl overflow-hidden border ${
+                    isDark ? "border-gray-700" : "border-gray-200"
+                  }`}
+                  onPress={() => handleRecipeClick(recipe)}
+                >
+                  <Image
+                    source={{ uri: recipe.image }}
+                    className="w-full h-48"
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.7)"]}
+                    className="absolute bottom-0 left-0 right-0 h-24"
+                  />
+                  <StyledView className="absolute bottom-0 left-0 right-0 p-4">
+                    <StyledView className="flex-row justify-between items-center">
+                      <StyledView className="flex-1">
+                        <StyledText className="text-white text-lg font-semibold mb-1">
                           {recipe.title}
                         </StyledText>
-                        <StyledTouchableOpacity
-                          onPress={(e) => handleSavePress(e, recipe)}
-                          className="p-2"
-                        >
-                          <FontAwesome
-                            name={
-                              isSaved(recipe.id) ? "bookmark" : "bookmark-o"
-                            }
-                            size={24}
-                            color={isDark ? "#3B82F6" : "#2563eb"}
-                          />
-                        </StyledTouchableOpacity>
-                      </StyledView>
-                      <StyledView className="flex-row flex-wrap gap-2">
-                        <StyledView
-                          className={`rounded-full px-2 py-1 ${
-                            isDark ? "bg-gray-700" : "bg-gray-100"
-                          }`}
-                        >
-                          <StyledText
-                            className={`text-sm ${
-                              isDark ? "text-gray-200" : "text-gray-800"
-                            }`}
-                          >
-                            {recipe.usedIngredientCount} ingredients matched
-                          </StyledText>
-                        </StyledView>
-                        <StyledView
-                          className={`rounded-full px-2 py-1 ${
-                            isDark ? "bg-gray-700" : "bg-gray-100"
-                          }`}
-                        >
-                          <StyledText
-                            className={`text-sm ${
-                              isDark ? "text-gray-200" : "text-gray-800"
-                            }`}
-                          >
-                            {recipe.missedIngredientCount} missing
+                        <StyledView className="flex-row items-center">
+                          <StyledText className="text-white text-sm">
+                            {recipe.usedIngredientCount} of{" "}
+                            {recipe.usedIngredientCount +
+                              recipe.missedIngredientCount}{" "}
+                            ingredients
                           </StyledText>
                         </StyledView>
                       </StyledView>
+                      <StyledTouchableOpacity
+                        className="ml-2"
+                        onPress={(e) => handleSavePress(e, recipe)}
+                      >
+                        <FontAwesome
+                          name={isSaved(recipe.id) ? "bookmark" : "bookmark-o"}
+                          size={24}
+                          color="white"
+                        />
+                      </StyledTouchableOpacity>
                     </StyledView>
-                  </StyledTouchableOpacity>
-                ))
-              )}
+                  </StyledView>
+                </StyledTouchableOpacity>
+              ))}
             </StyledView>
-          )}
-        </StyledView>
+          </StyledView>
+        )}
       </ScrollView>
 
-      <RecipeDetailModal
-        recipe={selectedRecipeDetails}
-        visible={!!selectedRecipeDetails}
-        onClose={() => setSelectedRecipeDetails(null)}
-      />
-    </>
+      {/* Recipe Detail Modal */}
+      {selectedRecipeDetails && (
+        <RecipeDetailModal
+          recipe={selectedRecipeDetails}
+          visible={!!selectedRecipeDetails}
+          onClose={() => setSelectedRecipeDetails(null)}
+        />
+      )}
+    </StyledSafeAreaView>
   );
 }
