@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   useColorScheme,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { styled } from "nativewind";
 import { Link } from "expo-router";
@@ -17,19 +19,19 @@ const StyledTextInput = styled(TextInput);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const { register } = useAuth();
+  const { register, isLoading, error } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const handleRegister = async () => {
-    try {
-      await register(name, email, password);
-    } catch (error) {
-      console.error("Registration failed:", error);
+    if (!name || !email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
     }
+    await register(name, email, password);
   };
 
   return (
@@ -56,6 +58,12 @@ export default function Register() {
         </StyledView>
 
         <StyledView className="space-y-4">
+          {error && (
+            <StyledView className="bg-red-100 border border-red-400 rounded-lg p-4">
+              <StyledText className="text-red-800">{error}</StyledText>
+            </StyledView>
+          )}
+
           <StyledView>
             <StyledText
               className={`text-sm font-medium mb-2 ${
@@ -123,12 +131,20 @@ export default function Register() {
           </StyledView>
 
           <StyledTouchableOpacity
-            className="bg-primary-600 rounded-lg py-3 mt-6"
+            className={`bg-primary-600 rounded-lg py-3 mt-6 ${
+              isLoading ? "opacity-50" : ""
+            }`}
             onPress={handleRegister}
+            disabled={isLoading}
           >
-            <StyledText className="text-white text-center font-semibold text-lg">
-              Sign Up
-            </StyledText>
+            <StyledView className="flex-row justify-center items-center">
+              {isLoading ? (
+                <ActivityIndicator color="white" className="mr-2" />
+              ) : null}
+              <StyledText className="text-white text-center font-semibold text-lg">
+                {isLoading ? "Creating account..." : "Sign Up"}
+              </StyledText>
+            </StyledView>
           </StyledTouchableOpacity>
 
           <StyledView className="flex-row justify-center mt-4">
