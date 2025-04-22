@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { useAuth } from "@/src/context/AuthContext";
 
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -11,29 +12,27 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const { isAuthenticated } = useAuth();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#2563eb",
+        tabBarActiveTintColor: isDark ? "#3B82F6" : "#2563EB",
+        tabBarInactiveTintColor: isDark ? "#6B7280" : "#9CA3AF",
+        tabBarStyle: {
+          backgroundColor: isDark ? "#111827" : "#FFFFFF",
+          borderTopColor: isDark ? "#1F2937" : "#E5E7EB",
+        },
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            backgroundColor: "transparent",
-            position: "absolute",
-          },
-          default: {},
-        }),
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="home" size={24} color={color} />
           ),
         }}
       />
@@ -41,17 +40,8 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: "Explore",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="search" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="meal-planner"
-        options={{
-          title: "Planner",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="calendar" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="search" size={24} color={color} />
           ),
         }}
       />
@@ -59,8 +49,8 @@ export default function TabLayout() {
         name="shopping-list"
         options={{
           title: "Shopping",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="shopping-basket" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="shopping-basket" size={24} color={color} />
           ),
         }}
       />
@@ -68,8 +58,8 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: "Saved",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="bookmark" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="bookmark" size={24} color={color} />
           ),
         }}
       />
@@ -77,9 +67,27 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="user" size={24} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="preferences"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="meal-planner"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="chatbot"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

@@ -140,7 +140,7 @@ export default function ShoppingList() {
 
   return (
     <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
-      <StyledView className="p-4">
+      <StyledView className="p-4 mt-10">
         <StyledText
           className={`text-3xl font-bold mb-6 ${
             isDark ? "text-white" : "text-gray-800"
@@ -149,12 +149,12 @@ export default function ShoppingList() {
           Shopping List
         </StyledText>
 
-        <StyledTouchableOpacity
+        {/* <StyledTouchableOpacity
           className="bg-primary-600 p-2 rounded-lg mb-4"
           onPress={debugShoppingList}
         >
           <StyledText className="text-white text-center">Debug List</StyledText>
-        </StyledTouchableOpacity>
+        </StyledTouchableOpacity> */}
 
         {/* Add New List Input */}
         <StyledView className="flex-row items-center mb-6">

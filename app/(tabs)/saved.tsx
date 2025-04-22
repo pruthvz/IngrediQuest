@@ -156,7 +156,7 @@ export default function SavedRecipes() {
 
   return (
     <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
-      <StyledView className="p-4">
+      <StyledView className="p-4 mt-10">
         <StyledText
           className={`text-3xl font-bold mb-6 ${
             isDark ? "text-white" : "text-gray-800"

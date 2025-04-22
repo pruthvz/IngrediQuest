@@ -6,6 +6,9 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { useColorScheme } from "react-native";
+import { UserPreferencesProvider } from "../src/context/UserPreferencesContext";
+import FloatingChatButton from "../src/components/FloatingChatButton";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -19,6 +22,9 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     ...FontAwesome.font,
   });
+
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -38,12 +44,23 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <SavedRecipesProvider>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          </Stack>
-        </SavedRecipesProvider>
+        <UserPreferencesProvider>
+          <SavedRecipesProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+            <FloatingChatButton />
+          </SavedRecipesProvider>
+        </UserPreferencesProvider>
       </AuthProvider>
     </ThemeProvider>
   );

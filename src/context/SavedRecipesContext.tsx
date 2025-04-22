@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 
 interface Recipe {
   id: number;
@@ -20,6 +21,32 @@ const SavedRecipesContext = createContext<SavedRecipesContextType | undefined>(
   undefined
 );
 
+// Helper function to safely use storage
+const safeStorage = {
+  getItem: async (key: string): Promise<string | null> => {
+    try {
+      if (Platform.OS === "web") {
+        return localStorage.getItem(key);
+      }
+      return await AsyncStorage.getItem(key);
+    } catch (error) {
+      console.error("Error reading from storage:", error);
+      return null;
+    }
+  },
+  setItem: async (key: string, value: string): Promise<void> => {
+    try {
+      if (Platform.OS === "web") {
+        localStorage.setItem(key, value);
+      } else {
+        await AsyncStorage.setItem(key, value);
+      }
+    } catch (error) {
+      console.error("Error writing to storage:", error);
+    }
+  },
+};
+
 export function SavedRecipesProvider({
   children,
 }: {
@@ -34,7 +61,7 @@ export function SavedRecipesProvider({
 
   const loadSavedRecipes = async () => {
     try {
-      const saved = await AsyncStorage.getItem("savedRecipes");
+      const saved = await safeStorage.getItem("savedRecipes");
       if (saved) {
         setSavedRecipes(JSON.parse(saved));
       }
@@ -46,10 +73,7 @@ export function SavedRecipesProvider({
   const saveRecipe = async (recipe: Recipe) => {
     try {
       const updatedRecipes = [...savedRecipes, recipe];
-      await AsyncStorage.setItem(
-        "savedRecipes",
-        JSON.stringify(updatedRecipes)
-      );
+      await safeStorage.setItem("savedRecipes", JSON.stringify(updatedRecipes));
       setSavedRecipes(updatedRecipes);
     } catch (error) {
       console.error("Error saving recipe:", error);
@@ -61,10 +85,7 @@ export function SavedRecipesProvider({
       const updatedRecipes = savedRecipes.filter(
         (recipe) => recipe.id !== recipeId
       );
-      await AsyncStorage.setItem(
-        "savedRecipes",
-        JSON.stringify(updatedRecipes)
-      );
+      await safeStorage.setItem("savedRecipes", JSON.stringify(updatedRecipes));
       setSavedRecipes(updatedRecipes);
     } catch (error) {
       console.error("Error removing recipe:", error);

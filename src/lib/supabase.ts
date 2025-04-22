@@ -1,12 +1,19 @@
 import "react-native-url-polyfill/auto";
 import { createClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Database } from "../types/supabase";
+import Constants from "expo-constants";
 
-const supabaseUrl = "https://xoejqbmsmnjpisnzcduv.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvZWpxYm1zbW5qcGlzbnpjZHV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk1NTQ5ODcsImV4cCI6MjA1NTEzMDk4N30.6CXMvITxnRNMvr7Km9lGddmCowNuA2m0fL6BWNBoyps";
+// Ensure environment variables are defined
+const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase environment variables");
+}
+
+// Create Supabase client with type safety
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
@@ -14,3 +21,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+// Utility function to handle Supabase errors
+export const handleSupabaseError = (error: Error) => {
+  console.error("Supabase error:", error.message);
+  // You can add more error handling logic here, like showing a toast notification
+  throw error;
+};
+
+// Helper function to check if user is authenticated
+export const isAuthenticated = () => {
+  return !!supabase.auth.getSession();
+};

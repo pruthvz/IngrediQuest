@@ -12,6 +12,8 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useAuth } from "../../src/context/AuthContext";
 import { useSavedRecipes } from "../../src/context/SavedRecipesContext";
 import { Link } from "expo-router";
+import { useRouter } from "expo-router";
+import { useUserPreferences } from "../../src/context/UserPreferencesContext";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -57,11 +59,67 @@ const settingsItems: SettingItem[] = [
   },
 ];
 
-export default function Profile() {
+interface SettingItemProps {
+  icon: string;
+  title: string;
+  subtitle?: string;
+  onPress: () => void;
+  isDark: boolean;
+}
+
+const SettingItem = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  isDark,
+}: SettingItemProps) => (
+  <StyledTouchableOpacity
+    onPress={onPress}
+    className={`flex-row items-center p-4 border-b ${
+      isDark ? "border-gray-800" : "border-gray-200"
+    }`}
+  >
+    <StyledView
+      className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${
+        isDark ? "bg-gray-800" : "bg-gray-100"
+      }`}
+    >
+      <FontAwesome
+        name={icon}
+        size={20}
+        color={isDark ? "#9CA3AF" : "#4B5563"}
+      />
+    </StyledView>
+    <StyledView className="flex-1">
+      <StyledText
+        className={`font-semibold ${isDark ? "text-white" : "text-gray-900"}`}
+      >
+        {title}
+      </StyledText>
+      {subtitle && (
+        <StyledText
+          className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"}`}
+        >
+          {subtitle}
+        </StyledText>
+      )}
+    </StyledView>
+    <FontAwesome
+      name="chevron-right"
+      size={16}
+      color={isDark ? "#6B7280" : "#9CA3AF"}
+    />
+  </StyledTouchableOpacity>
+);
+
+export default function ProfileScreen() {
   const { logout, username } = useAuth();
   const { savedRecipes } = useSavedRecipes();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
+  const router = useRouter();
+  const { preferences } = useUserPreferences();
 
   const profileItems = [
     {
@@ -104,7 +162,7 @@ export default function Profile() {
 
   return (
     <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
-      <StyledView className="p-4">
+      <StyledView className="p-4 mt-10">
         {/* Profile Header */}
         <StyledView
           className={`p-6 rounded-xl mb-6 ${
@@ -163,76 +221,105 @@ export default function Profile() {
           </StyledView>
         </StyledView>
 
-        {/* Settings */}
-        <StyledView className="space-y-3">
-          {profileItems.map((item) => {
-            const Component = item.route ? Link : StyledView;
-            return (
-              <Component
-                key={item.id}
-                href={item.route || undefined}
-                asChild={!!item.route}
-              >
-                <StyledTouchableOpacity
-                  className={`flex-row items-center p-4 rounded-lg ${
-                    isDark ? "bg-gray-800" : "bg-white"
-                  }`}
-                  disabled={!item.route}
-                >
-                  <StyledView
-                    className="w-10 h-10 rounded-full items-center justify-center mr-4"
-                    style={{ backgroundColor: `${item.color}20` }}
-                  >
-                    <FontAwesome
-                      name={item.icon as any}
-                      size={20}
-                      color={item.color}
-                    />
-                  </StyledView>
-                  <StyledView className="flex-1 flex-row items-center justify-between">
-                    <StyledText
-                      className={`text-lg ${
-                        isDark ? "text-white" : "text-gray-800"
-                      }`}
-                    >
-                      {item.title}
-                    </StyledText>
-                    {item.count !== undefined && (
-                      <StyledView className="bg-primary-100 px-2 py-1 rounded-full">
-                        <StyledText className="text-primary-600 font-medium">
-                          {item.count}
-                        </StyledText>
-                      </StyledView>
-                    )}
-                  </StyledView>
-                  <FontAwesome
-                    name="chevron-right"
-                    size={16}
-                    color={isDark ? "#6B7280" : "#9CA3AF"}
-                  />
-                </StyledTouchableOpacity>
-              </Component>
-            );
-          })}
-        </StyledView>
-
-        {/* Logout Button */}
-        <StyledTouchableOpacity
-          className="mt-6 p-4 rounded-lg bg-red-500"
-          onPress={logout}
+        {/* Settings Sections */}
+        <StyledView
+          className={`rounded-t-3xl ${isDark ? "bg-gray-900" : "bg-white"}`}
         >
-          <StyledView className="flex-row items-center justify-center">
-            <FontAwesome
-              name="sign-out"
-              size={20}
-              color="white"
-              style={{ marginRight: 8 }}
-            />
-            <StyledText className="text-white text-lg font-semibold">
-              Logout
+          {/* Cooking Preferences */}
+          <StyledView className="mb-4">
+            <StyledText
+              className={`px-4 py-2 text-sm font-semibold ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              COOKING PREFERENCES
             </StyledText>
+            <SettingItem
+              icon="sliders"
+              title="Dietary Preferences"
+              subtitle={preferences.dietaryPreferences.join(", ") || "Not set"}
+              onPress={() => router.push("/preferences")}
+              isDark={isDark}
+            />
+            <SettingItem
+              icon="calendar"
+              title="Meal Planner"
+              subtitle="Plan your weekly meals"
+              onPress={() => router.push("/meal-planner")}
+              isDark={isDark}
+            />
           </StyledView>
-        </StyledTouchableOpacity>
+
+          {/* Lists */}
+          <StyledView className="mb-4">
+            <StyledText
+              className={`px-4 py-2 text-sm font-semibold ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              YOUR LISTS
+            </StyledText>
+            <SettingItem
+              icon="bookmark"
+              title="Saved Recipes"
+              onPress={() => router.push("/saved")}
+              isDark={isDark}
+            />
+            <SettingItem
+              icon="shopping-basket"
+              title="Shopping List"
+              onPress={() => router.push("/shopping-list")}
+              isDark={isDark}
+            />
+          </StyledView>
+
+          {/* Account Settings */}
+          <StyledView className="mb-4">
+            <StyledText
+              className={`px-4 py-2 text-sm font-semibold ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              ACCOUNT
+            </StyledText>
+            <SettingItem
+              icon="user"
+              title="Account Settings"
+              onPress={() => {}}
+              isDark={isDark}
+            />
+            <SettingItem
+              icon="bell"
+              title="Notifications"
+              onPress={() => {}}
+              isDark={isDark}
+            />
+            <SettingItem
+              icon="gear"
+              title="App Settings"
+              onPress={() => {}}
+              isDark={isDark}
+            />
+          </StyledView>
+
+          {/* Logout Button */}
+          <StyledTouchableOpacity
+            className="mt-6 p-4 rounded-lg bg-red-500"
+            onPress={logout}
+          >
+            <StyledView className="flex-row items-center justify-center">
+              <FontAwesome
+                name="sign-out"
+                size={20}
+                color="white"
+                style={{ marginRight: 8 }}
+              />
+              <StyledText className="text-white text-lg font-semibold">
+                Logout
+              </StyledText>
+            </StyledView>
+          </StyledTouchableOpacity>
+        </StyledView>
       </StyledView>
     </ScrollView>
   );

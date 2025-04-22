@@ -196,7 +196,7 @@ export default function ExploreScreen() {
 
   return (
     <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
-      <StyledView className="p-4">
+      <StyledView className="p-4 mt-10">
         {/* Search Bar */}
         <StyledView className="mb-6">
           <StyledTextInput
