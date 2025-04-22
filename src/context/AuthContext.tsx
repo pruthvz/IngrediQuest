@@ -164,19 +164,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setIsLoading(true);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
       if (data.user) {
         await updateUsername(data.user.id);
         setIsAuthenticated(true);
+        router.replace("/(tabs)");
+      } else {
+        setError("Login failed. Please try again.");
       }
-      router.replace("/(tabs)");
     } catch (error: any) {
-      setError(error.message);
+      setError(error.message || "An unexpected error occurred");
       console.error("Error logging in:", error.message);
     } finally {
       setIsLoading(false);

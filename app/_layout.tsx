@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@/src/components/ThemeProvider";
-import { AuthProvider } from "@/src/context/AuthContext";
+import { AuthProvider, useAuth } from "@/src/context/AuthContext";
 import { SavedRecipesProvider } from "@/src/context/SavedRecipesContext";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
@@ -18,13 +18,34 @@ export {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+function RootLayoutNav() {
+  const { isAuthenticated } = useAuth();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  return (
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack>
+      {isAuthenticated && <FloatingChatButton />}
+    </>
+  );
+}
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     ...FontAwesome.font,
   });
-
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -46,19 +67,7 @@ export default function RootLayout() {
       <AuthProvider>
         <UserPreferencesProvider>
           <SavedRecipesProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen
-                name="(tabs)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-            </Stack>
-            <FloatingChatButton />
+            <RootLayoutNav />
           </SavedRecipesProvider>
         </UserPreferencesProvider>
       </AuthProvider>

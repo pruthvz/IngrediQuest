@@ -35,7 +35,12 @@ export default function Login() {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    await login(email, password);
+    try {
+      await login(email, password);
+    } catch (error) {
+      // Error is handled by the AuthContext
+      console.error("Login error:", error);
+    }
   };
 
   return (
