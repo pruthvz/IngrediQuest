@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from "@/src/context/AuthContext";
 
 import { HapticTab } from "@/components/HapticTab";
@@ -23,16 +23,32 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: isDark ? "#111827" : "#FFFFFF",
           borderTopColor: isDark ? "#1F2937" : "#E5E7EB",
+          height: 80,
+          paddingBottom: 8,
+          paddingTop: 8,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 10,
+          position: "absolute",
+          borderTopWidth: 0,
         },
         headerShown: false,
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="home" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome5 name="home" size={22} color={color} solid={focused} />
           ),
         }}
       />
@@ -40,8 +56,13 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: "Explore",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="search" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome5
+              name="compass"
+              size={22}
+              color={color}
+              solid={focused}
+            />
           ),
         }}
       />
@@ -49,8 +70,13 @@ export default function TabLayout() {
         name="shopping-list"
         options={{
           title: "Shopping",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="shopping-basket" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome5
+              name="shopping-basket"
+              size={22}
+              color={color}
+              solid={focused}
+            />
           ),
         }}
       />
@@ -58,8 +84,13 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: "Saved",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="bookmark" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome5
+              name="bookmark"
+              size={22}
+              color={color}
+              solid={focused}
+            />
           ),
         }}
       />
@@ -67,8 +98,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="user" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome5 name="user" size={22} color={color} solid={focused} />
           ),
         }}
       />
