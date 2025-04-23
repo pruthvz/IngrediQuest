@@ -6,18 +6,26 @@ import {
   TouchableOpacity,
   Image,
   useColorScheme,
+  Platform,
+  StatusBar,
+  SafeAreaView,
+  Switch,
 } from "react-native";
 import { styled } from "nativewind";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useAuth } from "../../src/context/AuthContext";
 import { useSavedRecipes } from "../../src/context/SavedRecipesContext";
 import { Link } from "expo-router";
 import { useRouter } from "expo-router";
 import { useUserPreferences } from "../../src/context/UserPreferencesContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
+const StyledSafeAreaView = styled(SafeAreaView);
+const StyledScrollView = styled(ScrollView);
+const StyledSwitch = styled(Switch);
 
 interface SettingItem {
   id: string;
@@ -26,43 +34,12 @@ interface SettingItem {
   color: string;
 }
 
-const settingsItems: SettingItem[] = [
-  {
-    id: "1",
-    title: "Dietary Preferences",
-    icon: "leaf",
-    color: "#10B981", // green
-  },
-  {
-    id: "2",
-    title: "Allergies & Restrictions",
-    icon: "exclamation-circle",
-    color: "#F59E0B", // yellow
-  },
-  {
-    id: "3",
-    title: "Saved Recipes",
-    icon: "heart",
-    color: "#EF4444", // red
-  },
-  {
-    id: "4",
-    title: "Cooking Skill Level",
-    icon: "star",
-    color: "#6366F1", // indigo
-  },
-  {
-    id: "5",
-    title: "Notification Settings",
-    icon: "bell",
-    color: "#8B5CF6", // purple
-  },
-];
-
 interface SettingItemProps {
   icon: string;
   title: string;
   subtitle?: string;
+  color?: string;
+  rightElement?: React.ReactNode;
   onPress: () => void;
   isDark: boolean;
 }
@@ -71,25 +48,25 @@ const SettingItem = ({
   icon,
   title,
   subtitle,
+  color,
+  rightElement,
   onPress,
   isDark,
 }: SettingItemProps) => (
   <StyledTouchableOpacity
     onPress={onPress}
-    className={`flex-row items-center p-4 border-b ${
-      isDark ? "border-gray-800" : "border-gray-200"
+    className={`flex-row items-center px-5 py-4 mb-0.5 ${
+      isDark ? "bg-gray-800" : "bg-white"
     }`}
+    style={{
+      borderRadius: 12,
+    }}
   >
     <StyledView
-      className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${
-        isDark ? "bg-gray-800" : "bg-gray-100"
-      }`}
+      className="w-10 h-10 rounded-full items-center justify-center mr-4"
+      style={{ backgroundColor: color || (isDark ? "#4F46E5" : "#6366F1") }}
     >
-      <FontAwesome
-        name={icon}
-        size={20}
-        color={isDark ? "#9CA3AF" : "#4B5563"}
-      />
+      <FontAwesome5 name={icon} size={16} color="white" />
     </StyledView>
     <StyledView className="flex-1">
       <StyledText
@@ -105,11 +82,13 @@ const SettingItem = ({
         </StyledText>
       )}
     </StyledView>
-    <FontAwesome
-      name="chevron-right"
-      size={16}
-      color={isDark ? "#6B7280" : "#9CA3AF"}
-    />
+    {rightElement || (
+      <FontAwesome5
+        name="chevron-right"
+        size={14}
+        color={isDark ? "#6B7280" : "#9CA3AF"}
+      />
+    )}
   </StyledTouchableOpacity>
 );
 
@@ -121,206 +100,260 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { preferences } = useUserPreferences();
 
-  const profileItems = [
-    {
-      id: "1",
-      title: "Saved Recipes",
-      icon: "bookmark",
-      color: "#EF4444",
-      count: savedRecipes.length,
-      route: "/(tabs)/saved",
-    },
-    {
-      id: "2",
-      title: "Shopping List",
-      icon: "shopping-basket",
-      color: "#F59E0B",
-      route: "/(tabs)/shopping-list",
-    },
-    {
-      id: "3",
-      title: "Dietary Preferences",
-      icon: "leaf",
-      color: "#10B981",
-      route: null,
-    },
-    {
-      id: "4",
-      title: "Allergies & Restrictions",
-      icon: "exclamation-circle",
-      color: "#6366F1",
-      route: null,
-    },
-    {
-      id: "5",
-      title: "Notification Settings",
-      icon: "bell",
-      color: "#8B5CF6",
-      route: null,
-    },
-  ];
+  const [pushNotifications, setPushNotifications] = React.useState(true);
+  const [darkMode, setDarkMode] = React.useState(isDark);
 
   return (
-    <ScrollView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
-      <StyledView className="p-4 mt-10">
-        {/* Profile Header */}
-        <StyledView
-          className={`p-6 rounded-xl mb-6 ${
-            isDark ? "bg-gray-800" : "bg-white"
-          }`}
+    <StyledSafeAreaView
+      className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
+      style={{
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+      }}
+    >
+      <StyledScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Header with gradient */}
+        <LinearGradient
+          colors={
+            isDark
+              ? ["#4F46E5", "#6366F1", "#818CF8"]
+              : ["#6366F1", "#818CF8", "#A5B4FC"]
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          className="pt-8 pb-12 rounded-b-3xl"
         >
-          <StyledView className="items-center">
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150" }}
-              className="w-24 h-24 rounded-full mb-4"
-            />
-            <StyledText
-              className={`text-xl font-bold mb-1 ${
-                isDark ? "text-white" : "text-gray-900"
-              }`}
-            >
-              {username || "User"}
-            </StyledText>
-          </StyledView>
-
-          <StyledView className="flex-row justify-around mt-6">
-            <Link href="/(tabs)/saved" asChild>
-              <StyledTouchableOpacity className="items-center">
-                <StyledText
-                  className={`text-lg font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  {savedRecipes.length}
-                </StyledText>
-                <StyledText
-                  className={`text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Saved Recipes
-                </StyledText>
-              </StyledTouchableOpacity>
-            </Link>
-            <Link href="/(tabs)/shopping-list" asChild>
-              <StyledTouchableOpacity className="items-center">
-                <FontAwesome
-                  name="shopping-basket"
-                  size={24}
-                  color={isDark ? "#3B82F6" : "#2563eb"}
+          <StyledView className="px-5">
+            <StyledView className="items-center">
+              <StyledView className="p-2 bg-white/20 rounded-full mb-4">
+                <Image
+                  source={{ uri: "https://i.pravatar.cc/150" }}
+                  className="w-24 h-24 rounded-full"
                 />
-                <StyledText
-                  className={`text-sm mt-1 ${
-                    isDark ? "text-gray-400" : "text-gray-600"
-                  }`}
-                >
-                  Shopping List
-                </StyledText>
-              </StyledTouchableOpacity>
-            </Link>
+              </StyledView>
+              <StyledText className="text-white text-xl font-bold">
+                {username || "User"}
+              </StyledText>
+            </StyledView>
+
+            <StyledView className="flex-row justify-between mt-6 bg-white/10 rounded-2xl p-4">
+              <Link href="/(tabs)/saved" asChild>
+                <StyledTouchableOpacity className="items-center flex-1">
+                  <StyledView className="bg-white/20 w-10 h-10 rounded-full items-center justify-center mb-2">
+                    <FontAwesome5 name="bookmark" size={16} color="white" />
+                  </StyledView>
+                  <StyledText className="text-white font-bold text-base">
+                    {savedRecipes.length}
+                  </StyledText>
+                  <StyledText className="text-white/80 text-xs">
+                    Saved Recipes
+                  </StyledText>
+                </StyledTouchableOpacity>
+              </Link>
+              <Link href="/(tabs)/shopping-list" asChild>
+                <StyledTouchableOpacity className="items-center flex-1">
+                  <StyledView className="bg-white/20 w-10 h-10 rounded-full items-center justify-center mb-2">
+                    <FontAwesome5
+                      name="shopping-basket"
+                      size={16}
+                      color="white"
+                    />
+                  </StyledView>
+                  <StyledText className="text-white font-bold text-base">
+                    Lists
+                  </StyledText>
+                  <StyledText className="text-white/80 text-xs">
+                    Shopping Lists
+                  </StyledText>
+                </StyledTouchableOpacity>
+              </Link>
+              <Link href="/chatbot" asChild>
+                <StyledTouchableOpacity className="items-center flex-1">
+                  <StyledView className="bg-white/20 w-10 h-10 rounded-full items-center justify-center mb-2">
+                    <FontAwesome5 name="robot" size={16} color="white" />
+                  </StyledView>
+                  <StyledText className="text-white font-bold text-base">
+                    Chat
+                  </StyledText>
+                  <StyledText className="text-white/80 text-xs">
+                    Recipe Assistant
+                  </StyledText>
+                </StyledTouchableOpacity>
+              </Link>
+            </StyledView>
           </StyledView>
-        </StyledView>
+        </LinearGradient>
 
         {/* Settings Sections */}
-        <StyledView
-          className={`rounded-t-3xl ${isDark ? "bg-gray-900" : "bg-white"}`}
-        >
-          {/* Cooking Preferences */}
-          <StyledView className="mb-4">
-            <StyledText
-              className={`px-4 py-2 text-sm font-semibold ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              COOKING PREFERENCES
+        <StyledView className="px-5 pt-4 pb-10 mt-6">
+          {/* Account Section */}
+          <StyledView className="mb-6">
+            <StyledText className="text-sm uppercase font-bold mb-2 ml-1 text-indigo-500">
+              Account
             </StyledText>
-            <SettingItem
-              icon="sliders"
-              title="Dietary Preferences"
-              subtitle={preferences.dietaryPreferences.join(", ") || "Not set"}
-              onPress={() => router.push("/preferences")}
-              isDark={isDark}
-            />
-            <SettingItem
-              icon="calendar"
-              title="Meal Planner"
-              subtitle="Plan your weekly meals"
-              onPress={() => router.push("/meal-planner")}
-              isDark={isDark}
-            />
+            <StyledView className="rounded-2xl overflow-hidden">
+              {/* <SettingItem
+                icon="user"
+                title="Profile Information"
+                subtitle="Edit your personal details"
+                color="#6366F1"
+                onPress={() => {}}
+                isDark={isDark}
+              /> */}
+              <SettingItem
+                icon="envelope"
+                title="Email"
+                subtitle="youremail@example.com"
+                color="#8B5CF6"
+                onPress={() => {}}
+                isDark={isDark}
+              />
+              <SettingItem
+                icon="key"
+                title="Password"
+                subtitle="Change your password"
+                color="#EC4899"
+                onPress={() => {}}
+                isDark={isDark}
+              />
+            </StyledView>
           </StyledView>
 
-          {/* Lists */}
-          <StyledView className="mb-4">
-            <StyledText
-              className={`px-4 py-2 text-sm font-semibold ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              YOUR LISTS
+          {/* Preferences */}
+          <StyledView className="mb-6">
+            <StyledText className="text-sm uppercase font-bold mb-2 ml-1 text-indigo-500">
+              Cooking Preferences
             </StyledText>
-            <SettingItem
-              icon="bookmark"
-              title="Saved Recipes"
-              onPress={() => router.push("/saved")}
-              isDark={isDark}
-            />
-            <SettingItem
-              icon="shopping-basket"
-              title="Shopping List"
-              onPress={() => router.push("/shopping-list")}
-              isDark={isDark}
-            />
+            <StyledView className="rounded-2xl overflow-hidden">
+              <SettingItem
+                icon="utensils"
+                title="Dietary Preferences"
+                subtitle={
+                  preferences.dietaryPreferences.join(", ") || "Not set"
+                }
+                color="#10B981"
+                onPress={() => router.push("/preferences")}
+                isDark={isDark}
+              />
+              {/* <SettingItem
+                icon="allergies"
+                title="Allergies & Restrictions"
+                subtitle={preferences.allergies.join(", ") || "Not set"}
+                color="#F59E0B"
+                onPress={() => router.push("/preferences")}
+                isDark={isDark}
+              /> */}
+              <SettingItem
+                icon="calendar-alt"
+                title="Meal Planner"
+                subtitle="Plan your weekly meals"
+                color="#3B82F6"
+                onPress={() => router.push("/meal-planner")}
+                isDark={isDark}
+              />
+            </StyledView>
           </StyledView>
 
-          {/* Account Settings */}
-          <StyledView className="mb-4">
-            <StyledText
-              className={`px-4 py-2 text-sm font-semibold ${
-                isDark ? "text-gray-400" : "text-gray-600"
-              }`}
-            >
-              ACCOUNT
+          {/* App Settings */}
+          <StyledView className="mb-6">
+            <StyledText className="text-sm uppercase font-bold mb-2 ml-1 text-indigo-500">
+              App Settings
             </StyledText>
-            <SettingItem
-              icon="user"
-              title="Account Settings"
-              onPress={() => {}}
-              isDark={isDark}
-            />
-            <SettingItem
-              icon="bell"
-              title="Notifications"
-              onPress={() => {}}
-              isDark={isDark}
-            />
-            <SettingItem
-              icon="gear"
-              title="App Settings"
-              onPress={() => {}}
-              isDark={isDark}
-            />
+            <StyledView className="rounded-2xl overflow-hidden">
+              <SettingItem
+                icon="bell"
+                title="Push Notifications"
+                color="#EF4444"
+                rightElement={
+                  <StyledSwitch
+                    value={pushNotifications}
+                    onValueChange={() =>
+                      setPushNotifications(!pushNotifications)
+                    }
+                    trackColor={{ false: "#767577", true: "#818CF8" }}
+                    thumbColor={pushNotifications ? "#6366F1" : "#f4f3f4"}
+                  />
+                }
+                onPress={() => setPushNotifications(!pushNotifications)}
+                isDark={isDark}
+              />
+              <SettingItem
+                icon="moon"
+                title="Dark Mode"
+                color="#6B7280"
+                rightElement={
+                  <StyledSwitch
+                    value={darkMode}
+                    onValueChange={() => setDarkMode(!darkMode)}
+                    trackColor={{ false: "#767577", true: "#818CF8" }}
+                    thumbColor={darkMode ? "#6366F1" : "#f4f3f4"}
+                  />
+                }
+                onPress={() => setDarkMode(!darkMode)}
+                isDark={isDark}
+              />
+              <SettingItem
+                icon="globe"
+                title="Language"
+                subtitle="English"
+                color="#0EA5E9"
+                onPress={() => {}}
+                isDark={isDark}
+              />
+            </StyledView>
+          </StyledView>
+
+          {/* Help & Support */}
+          <StyledView className="mb-6">
+            <StyledText className="text-sm uppercase font-bold mb-2 ml-1 text-indigo-500">
+              Help & Support
+            </StyledText>
+            <StyledView className="rounded-2xl overflow-hidden">
+              <SettingItem
+                icon="question-circle"
+                title="Help Center"
+                color="#8B5CF6"
+                onPress={() => {}}
+                isDark={isDark}
+              />
+              <SettingItem
+                icon="comment-alt"
+                title="Send Feedback"
+                color="#14B8A6"
+                onPress={() => {}}
+                isDark={isDark}
+              />
+              <SettingItem
+                icon="info-circle"
+                title="About Us"
+                color="#F97316"
+                onPress={() => {}}
+                isDark={isDark}
+              />
+            </StyledView>
           </StyledView>
 
           {/* Logout Button */}
           <StyledTouchableOpacity
-            className="mt-6 p-4 rounded-lg bg-red-500"
+            className="mt-4 p-4 rounded-xl overflow-hidden"
+            style={{
+              backgroundColor: isDark ? "#991B1B" : "#EF4444",
+            }}
             onPress={logout}
           >
             <StyledView className="flex-row items-center justify-center">
-              <FontAwesome
-                name="sign-out"
-                size={20}
+              <FontAwesome5
+                name="sign-out-alt"
+                size={16}
                 color="white"
                 style={{ marginRight: 8 }}
               />
-              <StyledText className="text-white text-lg font-semibold">
+              <StyledText className="text-white text-base font-semibold">
                 Logout
               </StyledText>
             </StyledView>
           </StyledTouchableOpacity>
         </StyledView>
-      </StyledView>
-    </ScrollView>
+      </StyledScrollView>
+    </StyledSafeAreaView>
   );
 }

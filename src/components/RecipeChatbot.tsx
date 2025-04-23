@@ -9,16 +9,20 @@ import {
   Platform,
   ActivityIndicator,
   useColorScheme,
+  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import { styled } from "nativewind";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useUserPreferences } from "../context/UserPreferencesContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTextInput = styled(TextInput);
 const StyledScrollView = styled(ScrollView);
 const StyledTouchableOpacity = styled(TouchableOpacity);
+const StyledSafeAreaView = styled(SafeAreaView);
 
 interface Message {
   id: string;
@@ -112,12 +116,46 @@ export default function RecipeChatbot() {
     }
   };
 
+  // Format timestamp for messages
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
+    <StyledSafeAreaView
+      className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
+      style={{
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+      }}
     >
-      <StyledView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+      {/* Header */}
+      <LinearGradient
+        colors={
+          isDark
+            ? ["#4F46E5", "#6366F1", "#818CF8"]
+            : ["#6366F1", "#818CF8", "#A5B4FC"]
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        className="px-5 pt-4 pb-4"
+      >
+        <StyledView className="flex-row items-center">
+          <FontAwesome5 name="robot" size={24} color="white" />
+          <StyledView className="ml-3">
+            <StyledText className="text-white font-bold text-lg">
+              Recipe Assistant
+            </StyledText>
+            <StyledText className="text-white/70 text-xs">
+              Ask me anything about recipes
+            </StyledText>
+          </StyledView>
+        </StyledView>
+      </LinearGradient>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
         <StyledScrollView
           ref={scrollViewRef}
           className="flex-1 px-4"
@@ -131,15 +169,22 @@ export default function RecipeChatbot() {
               }`}
             >
               <StyledView
-                className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                className={`rounded-2xl px-4 py-3 max-w-[85%] ${
                   message.sender === "user"
                     ? isDark
-                      ? "bg-blue-600"
-                      : "bg-blue-500"
+                      ? "bg-indigo-600"
+                      : "bg-indigo-500"
                     : isDark
                     ? "bg-gray-800"
                     : "bg-white"
                 }`}
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                }}
               >
                 <StyledText
                   className={`${
@@ -152,20 +197,47 @@ export default function RecipeChatbot() {
                 >
                   {message.text}
                 </StyledText>
+                <StyledText
+                  className={`text-xs mt-1 ${
+                    message.sender === "user"
+                      ? "text-indigo-200"
+                      : isDark
+                      ? "text-gray-500"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {formatTime(message.timestamp)}
+                </StyledText>
               </StyledView>
             </StyledView>
           ))}
           {isLoading && (
             <StyledView className="items-start mb-4">
               <StyledView
-                className={`rounded-lg px-4 py-2 ${
+                className={`rounded-2xl px-4 py-3 ${
                   isDark ? "bg-gray-800" : "bg-white"
                 }`}
+                style={{
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 2,
+                  elevation: 2,
+                }}
               >
-                <ActivityIndicator
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size="small"
-                />
+                <StyledView className="flex-row items-center">
+                  <ActivityIndicator
+                    color={isDark ? "#818CF8" : "#6366F1"}
+                    size="small"
+                  />
+                  <StyledText
+                    className={`ml-2 text-sm ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Thinking...
+                  </StyledText>
+                </StyledView>
               </StyledView>
             </StyledView>
           )}
@@ -173,15 +245,20 @@ export default function RecipeChatbot() {
 
         <StyledView
           className={`p-4 border-t ${
-            isDark
-              ? "bg-gray-900 border-gray-800"
-              : "bg-gray-50 border-gray-200"
+            isDark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
           }`}
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: -3 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            elevation: 10,
+          }}
         >
           <StyledView className="flex-row items-center">
             <StyledTextInput
-              className={`flex-1 rounded-full px-4 py-2 mr-2 ${
-                isDark ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+              className={`flex-1 rounded-full px-5 py-3 mr-2 ${
+                isDark ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-900"
               }`}
               placeholder="Ask me anything about recipes..."
               placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
@@ -192,17 +269,19 @@ export default function RecipeChatbot() {
             <StyledTouchableOpacity
               onPress={handleSend}
               disabled={!inputText.trim() || isLoading}
-              className={`rounded-full p-2 ${
+              className={`rounded-full p-3.5 ${
                 !inputText.trim() || isLoading
                   ? isDark
-                    ? "bg-gray-800"
+                    ? "bg-gray-700"
                     : "bg-gray-200"
-                  : "bg-blue-500"
+                  : isDark
+                  ? "bg-indigo-600"
+                  : "bg-indigo-500"
               }`}
             >
-              <FontAwesome
-                name="send"
-                size={20}
+              <FontAwesome5
+                name="paper-plane"
+                size={16}
                 color={
                   !inputText.trim() || isLoading
                     ? isDark
@@ -214,7 +293,7 @@ export default function RecipeChatbot() {
             </StyledTouchableOpacity>
           </StyledView>
         </StyledView>
-      </StyledView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </StyledSafeAreaView>
   );
 }
