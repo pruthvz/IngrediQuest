@@ -50,36 +50,7 @@ IngrediQuest is a modern recipe management and discovery app built with React Na
 - Expo CLI
 - iOS Simulator (for Mac users) or Android Studio (for Android development)
 
-### Environment Setup
-
-1. Clone the repository
-
-   ```bash
-   git clone [repository-url]
-   cd IngrediQuest
-   ```
-
-2. Create a `.env` file in the root directory with the following variables:
-
-   ```bash
-   EXPO_PUBLIC_SPOONACULAR_API_KEY=your_spoonacular_api_key_here
-   EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-
-3. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-4. Start the development server
-   ```bash
-   npx expo start
-   ```
-
-### Running the App
-
-After starting the development server, you have several options to run the app:
+You have several options to run the app:
 
 - Press `a` to open in Android Emulator
 - Press `i` to open in iOS Simulator
@@ -94,4 +65,4 @@ We welcome contributions! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details. [Lincoln University]
