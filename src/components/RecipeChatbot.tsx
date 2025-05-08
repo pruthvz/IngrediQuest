@@ -287,17 +287,22 @@ export default function RecipeChatbot() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const webScrollViewRef = useRef<HTMLDivElement | null>(null);
   const { preferences } = useUserPreferences();
   const colorScheme = useColorScheme();
   const isDark = preferences.isDarkMode;
+  const isWeb = Platform.OS === "web";
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const scrollToBottom = () => {
-    if (scrollViewRef.current) {
+    if (isWeb && webScrollViewRef.current) {
+      webScrollViewRef.current.scrollTop =
+        webScrollViewRef.current.scrollHeight;
+    } else if (scrollViewRef.current) {
       scrollViewRef.current.scrollToEnd({ animated: true });
     }
   };
@@ -343,6 +348,388 @@ export default function RecipeChatbot() {
     }
   };
 
+  // Custom Web styling
+  const webStyles: Record<string, any> = isWeb
+    ? {
+        container: {
+          height: "100%",
+          display: "flex",
+          flexDirection: "column" as const,
+          borderRadius: "16px",
+          overflow: "hidden",
+          margin: "50px",
+        },
+        header: {
+          padding: "16px 24px",
+          display: "flex",
+          alignItems: "center",
+          borderBottom: isDark ? "1px solid #333" : "1px solid #e5e7eb",
+          background: isDark
+            ? "linear-gradient(135deg, #4338ca 0%, #6366f1 100%)"
+            : "linear-gradient(135deg, #4f46e5 0%, #818cf8 100%)",
+        },
+        headerTitle: {
+          fontWeight: "bold",
+          fontSize: "18px",
+          color: "white",
+          marginLeft: "12px",
+        },
+        headerSubtitle: {
+          fontSize: "12px",
+          color: "rgba(255, 255, 255, 0.8)",
+          marginLeft: "12px",
+          marginTop: "2px",
+        },
+        scrollArea: {
+          flex: 1,
+          overflowY: "auto" as const,
+          padding: "24px",
+          backgroundColor: isDark ? "#121212" : "#f9fafb",
+        },
+        messageContainer: {
+          marginBottom: "20px",
+          maxWidth: "80%",
+          animationName: "fadeIn",
+          animationDuration: "0.3s",
+          animationFillMode: "both",
+        },
+        userMessageContainer: {
+          alignSelf: "flex-end",
+          backgroundColor: isDark ? "#4f46e5" : "#4f46e5",
+          color: "white",
+          borderRadius: "16px 16px 0 16px",
+          padding: "12px 16px",
+          boxShadow: isDark
+            ? "0 2px 8px rgba(0, 0, 0, 0.3)"
+            : "0 2px 8px rgba(79, 70, 229, 0.2)",
+          transform: "translateZ(0)", // Force GPU acceleration
+          transition: "all 0.2s ease",
+        },
+        botMessageContainer: {
+          alignSelf: "flex-start",
+          backgroundColor: isDark ? "#27272a" : "white",
+          color: isDark ? "#f9fafb" : "#111827",
+          borderRadius: "16px 16px 16px 0",
+          padding: "12px 16px",
+          boxShadow: isDark
+            ? "0 2px 8px rgba(0, 0, 0, 0.2)"
+            : "0 2px 8px rgba(0, 0, 0, 0.05)",
+          transform: "translateZ(0)", // Force GPU acceleration
+          transition: "all 0.2s ease",
+        },
+        messageTimestamp: {
+          fontSize: "11px",
+          marginTop: "6px",
+          textAlign: "right" as const,
+          opacity: 0.7,
+        },
+        sectionTitle: {
+          fontSize: "16px",
+          fontWeight: "bold",
+          marginBottom: "8px",
+          color: isDark ? "#a5b4fc" : "#4f46e5",
+          borderBottom: isDark ? "1px solid #3f3f46" : "1px solid #e5e7eb",
+          paddingBottom: "6px",
+        },
+        sectionContent: {
+          fontSize: "14px",
+          marginBottom: "12px",
+          lineHeight: 1.5,
+        },
+        listItem: {
+          display: "flex",
+          marginBottom: "6px",
+          paddingLeft: "16px",
+          position: "relative" as const,
+          transition: "all 0.2s ease",
+        },
+        listItemBullet: {
+          position: "absolute" as const,
+          left: "0",
+          top: "6px",
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          backgroundColor: isDark ? "#a5b4fc" : "#4f46e5",
+        },
+        loadingContainer: {
+          alignSelf: "flex-start" as const,
+          display: "flex",
+          alignItems: "center",
+          padding: "8px 16px",
+          backgroundColor: isDark ? "#27272a" : "#e5e7eb",
+          borderRadius: "16px",
+          marginBottom: "20px",
+          animationName: "pulse",
+          animationDuration: "2s",
+          animationIterationCount: "infinite",
+        },
+        inputContainer: {
+          padding: "16px 24px",
+          display: "flex",
+          alignItems: "center",
+          borderTop: isDark ? "1px solid #333" : "1px solid #e5e7eb",
+          backgroundColor: isDark ? "#1f1f23" : "white",
+        },
+        textInput: {
+          flex: 1,
+          padding: "12px 16px",
+          borderRadius: "24px",
+          border: isDark ? "1px solid #3f3f46" : "1px solid #e5e7eb",
+          backgroundColor: isDark ? "#27272a" : "#f9fafb",
+          color: isDark ? "white" : "#111827",
+          fontSize: "14px",
+          marginRight: "12px",
+          outline: "none",
+          transition: "all 0.2s ease",
+        },
+        sendButton: {
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          backgroundColor: "#4f46e5",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "all 0.2s ease",
+          transform: "translateZ(0)", // Force GPU acceleration
+        },
+        disabledSendButton: {
+          backgroundColor: isDark ? "#3f3f46" : "#e5e7eb",
+          cursor: "not-allowed",
+        },
+        highlight: {
+          backgroundColor: isDark
+            ? "rgba(79, 70, 229, 0.15)"
+            : "rgba(79, 70, 229, 0.08)",
+          padding: "2px 4px",
+          borderRadius: "4px",
+          color: isDark ? "#a5b4fc" : "#4f46e5",
+          fontWeight: 500,
+        },
+      }
+    : {};
+
+  // Optimized rendering for web
+  if (isWeb) {
+    return (
+      <div style={webStyles.container}>
+        {/* Header */}
+        <div style={webStyles.header}>
+          <FontAwesome5 name="robot" size={24} color="white" />
+          <div>
+            <div style={webStyles.headerTitle}>Recipe Assistant</div>
+            <div style={webStyles.headerSubtitle}>
+              Ask me anything about cooking
+            </div>
+          </div>
+        </div>
+
+        {/* Messages Area */}
+        <div style={webStyles.scrollArea} ref={webScrollViewRef}>
+          {messages.map((message, msgIndex) => (
+            <div
+              key={message.id}
+              style={{
+                ...webStyles.messageContainer,
+                alignSelf:
+                  message.sender === "user" ? "flex-end" : "flex-start",
+                marginLeft: message.sender === "user" ? "auto" : "0",
+                animationDelay: `${msgIndex * 0.1}s`,
+              }}
+            >
+              <div
+                style={
+                  message.sender === "user"
+                    ? webStyles.userMessageContainer
+                    : webStyles.botMessageContainer
+                }
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = isDark
+                    ? "0 4px 12px rgba(0, 0, 0, 0.4)"
+                    : "0 4px 12px rgba(79, 70, 229, 0.25)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    message.sender === "user"
+                      ? isDark
+                        ? "0 2px 8px rgba(0, 0, 0, 0.3)"
+                        : "0 2px 8px rgba(79, 70, 229, 0.2)"
+                      : isDark
+                      ? "0 2px 8px rgba(0, 0, 0, 0.2)"
+                      : "0 2px 8px rgba(0, 0, 0, 0.05)";
+                }}
+              >
+                {message.sender === "user" ? (
+                  <div>{message.text}</div>
+                ) : message.sections ? (
+                  <div>
+                    {message.sections.map((section, index) => (
+                      <div key={index} style={{ marginBottom: "16px" }}>
+                        {section.title && (
+                          <div style={webStyles.sectionTitle}>
+                            {section.title}
+                          </div>
+                        )}
+                        {section.type === "list" ? (
+                          section.content.split("\n").map((item, idx) => (
+                            <div
+                              key={idx}
+                              style={webStyles.listItem}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.paddingLeft = "18px";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.paddingLeft = "16px";
+                              }}
+                            >
+                              <div style={webStyles.listItemBullet}></div>
+                              <div>{item.replace(/^-\s*/, "")}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <div style={webStyles.sectionContent}>
+                            {section.content}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div>{message.text}</div>
+                )}
+                <div style={webStyles.messageTimestamp}>
+                  {formatTime(message.timestamp)}
+                </div>
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div style={webStyles.loadingContainer}>
+              <div
+                style={{ width: "16px", height: "16px", marginRight: "8px" }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    animation: "spin 1s linear infinite",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke={isDark ? "#a5b4fc" : "#4f46e5"}
+                    strokeWidth="4"
+                    fill="none"
+                    strokeDasharray="62.83"
+                    strokeDashoffset="31.42"
+                  />
+                </svg>
+              </div>
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: isDark ? "#d4d4d8" : "#6b7280",
+                }}
+              >
+                Thinking...
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <div style={webStyles.inputContainer}>
+          <input
+            type="text"
+            style={webStyles.textInput}
+            placeholder="Ask me anything about recipes..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSend()}
+          />
+          <div
+            onClick={!inputText.trim() || isLoading ? undefined : handleSend}
+            style={{
+              ...webStyles.sendButton,
+              ...((!inputText.trim() || isLoading) &&
+                webStyles.disabledSendButton),
+            }}
+            onMouseEnter={(e) => {
+              if (inputText.trim() && !isLoading) {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.backgroundColor = "#4338ca";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (inputText.trim() && !isLoading) {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.backgroundColor = "#4f46e5";
+              }
+            }}
+          >
+            <FontAwesome5
+              name="paper-plane"
+              size={16}
+              color={
+                !inputText.trim() || isLoading
+                  ? isDark
+                    ? "#71717a"
+                    : "#9ca3af"
+                  : "white"
+              }
+            />
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+          }
+          input:focus {
+            border-color: #4f46e5 !important;
+            outline: none !important;
+            box-shadow: 0 0 0 2px ${
+              isDark ? "rgba(165, 180, 252, 0.3)" : "rgba(79, 70, 229, 0.2)"
+            };
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: ${isDark ? "#27272a" : "#f1f1f1"};
+            border-radius: 4px;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: ${isDark ? "#4b5563" : "#c7c7c7"};
+            border-radius: 4px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: ${isDark ? "#6b7280" : "#a3a3a3"};
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Original mobile rendering
   return (
     <StyledSafeAreaView
       className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}

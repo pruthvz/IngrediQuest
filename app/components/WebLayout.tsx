@@ -1,18 +1,13 @@
-// this component is the main layout for web pages
-// it provides the header, navigation, footer and consistent styling
-// it also handles dark mode and responsive design
-
 import React, { ReactNode } from "react";
 import { useColorScheme, Platform } from "react-native";
 import WebIcon from "./WebIcon";
 import { Link } from "expo-router";
-import FloatingChatButton from "./FloatingChatButton";
+import FloatingChatButton from "../../src/components/FloatingChatButton";
 
-// props for the layout component
 interface WebLayoutProps {
-  children: ReactNode; // content to display
-  title: string; // page title
-  currentTab?: string; // current navigation tab
+  children: ReactNode;
+  title: string;
+  currentTab?: string;
 }
 
 export default function WebLayout({
@@ -20,67 +15,115 @@ export default function WebLayout({
   title,
   currentTab,
 }: WebLayoutProps) {
-  // check if we're on web and get color scheme
   const isWeb = Platform.OS === "web";
-  const isDark = useColorScheme() === "dark";
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
 
-  // return normal view on mobile
   if (!isWeb) {
     return <>{children}</>;
   }
 
-  // styles for the layout components
+  // Theme configuration
+  const theme = {
+    colors: {
+      primary: "#6366f1",
+      primaryLight: "#818cf8",
+      primaryDark: "#4f46e5",
+      text: isDark ? "#f3f4f6" : "#111827",
+      textSecondary: isDark ? "#9ca3af" : "#6b7280",
+      background: isDark ? "#111827" : "#ffffff",
+      backgroundSecondary: isDark ? "#1f2937" : "#f9fafb",
+      border: isDark ? "#374151" : "#e5e7eb",
+      accent: isDark ? "#a5b4fc" : "#6366f1",
+    },
+    spacing: {
+      small: "0.5rem",
+      medium: "1rem",
+      large: "1.5rem",
+      xlarge: "2rem",
+    },
+    shadows: {
+      sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+      md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+      lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    },
+    radii: {
+      sm: "0.25rem",
+      md: "0.5rem",
+      lg: "0.75rem",
+      full: "9999px",
+    },
+  };
+
   const styles = {
     container: {
       display: "flex",
       flexDirection: "column" as const,
       minHeight: "100vh",
-      backgroundColor: isDark ? "#111827" : "#F9FAFB",
+      backgroundColor: theme.colors.backgroundSecondary,
       fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      color: theme.colors.text,
     },
     header: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
-      padding: "1rem 2rem",
-      backgroundColor: isDark ? "#1F2937" : "white",
-      borderBottom: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      padding: `${theme.spacing.medium} ${theme.spacing.xlarge}`,
+      backgroundColor: theme.colors.background,
+      borderBottom: `1px solid ${theme.colors.border}`,
+      boxShadow: theme.shadows.sm,
+      position: "sticky" as const,
+      top: 0,
+      zIndex: 50,
     },
-    logo: {
+    logoContainer: {
       display: "flex",
       alignItems: "center",
-      gap: "0.5rem",
+      gap: theme.spacing.small,
       fontSize: "1.25rem",
       fontWeight: 700,
-      color: "#4F46E5",
+      color: theme.colors.primary,
       textDecoration: "none",
+      transition: "all 0.2s ease",
+      ":hover": {
+        color: theme.colors.primaryLight,
+      },
     },
     logoIcon: {
       width: "2rem",
       height: "2rem",
-      backgroundColor: "#4F46E5",
-      borderRadius: "0.375rem",
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.radii.sm,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       color: "white",
+      transition: "all 0.2s ease",
     },
     nav: {
       display: "flex",
-      gap: "1.5rem",
+      gap: theme.spacing.large,
+      alignItems: "center",
     },
     navLink: {
-      color: isDark ? "#E5E7EB" : "#4B5563",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      color: theme.colors.textSecondary,
       textDecoration: "none",
       fontWeight: 500,
       fontSize: "0.95rem",
-      padding: "0.5rem 0",
+      padding: `${theme.spacing.small} 0`,
       position: "relative" as const,
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      ":hover": {
+        color: theme.colors.primaryLight,
+      },
     },
     activeNavLink: {
-      color: "#4F46E5",
+      color: theme.colors.primary,
       fontWeight: 600,
     },
     activeIndicator: {
@@ -89,84 +132,81 @@ export default function WebLayout({
       left: 0,
       right: 0,
       height: "2px",
-      backgroundColor: "#4F46E5",
-      borderRadius: "1px",
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.radii.full,
     },
     content: {
       flex: 1,
-      padding: "2rem",
-      backgroundColor: "#F9FAFB",
+      padding: theme.spacing.xlarge,
+      backgroundColor: theme.colors.backgroundSecondary,
+      overflowY: "auto" as const,
+      height: "calc(100vh - 64px)", // Subtract header height
+      position: "relative" as const,
     },
     contentInner: {
       maxWidth: "1200px",
       margin: "0 auto",
-      backgroundColor: "#FFFFFF",
-      borderRadius: "0.75rem",
-      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
-      padding: "2rem",
-      minHeight: "calc(100vh - 12rem)",
+      backgroundColor: theme.colors.background,
+      borderRadius: theme.radii.lg,
+      boxShadow: theme.shadows.sm,
+      padding: theme.spacing.xlarge,
+      height: "100%",
+      overflowY: "auto" as const,
     },
     pageTitle: {
       fontSize: "1.75rem",
       fontWeight: 700,
-      color: "#111827",
-      marginBottom: "1.5rem",
-      paddingBottom: "1rem",
-      borderBottom: "1px solid #E5E7EB",
+      color: theme.colors.text,
+      marginBottom: theme.spacing.large,
+      paddingBottom: theme.spacing.medium,
+      borderBottom: `1px solid ${theme.colors.border}`,
     },
     footer: {
-      padding: "1.5rem",
+      padding: theme.spacing.large,
       textAlign: "center" as const,
-      borderTop: `1px solid ${isDark ? "#374151" : "#E5E7EB"}`,
-      backgroundColor: isDark ? "#1F2937" : "white",
-      color: isDark ? "#9CA3AF" : "#6B7280",
+      borderTop: `1px solid ${theme.colors.border}`,
+      backgroundColor: theme.colors.background,
+      color: theme.colors.textSecondary,
       fontSize: "0.875rem",
     },
-    footerText: {
-      margin: 0,
-      color: isDark ? "#9CA3AF" : "#6B7280",
+    mobileMenuButton: {
+      display: "none",
+      backgroundColor: "transparent",
+      border: "none",
+      color: theme.colors.text,
+      cursor: "pointer",
+      padding: theme.spacing.small,
+      borderRadius: theme.radii.full,
+      ":hover": {
+        backgroundColor: isDark ? "#374151" : "#f3f4f6",
+      },
     },
   };
 
-  // update styles for dark mode if user prefers it
-  const prefersDarkMode =
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-  if (prefersDarkMode) {
-    styles.container.backgroundColor = "#111827";
-    styles.header.backgroundColor = "#1F2937";
-    styles.header.borderBottom = "1px solid #374151";
-    styles.logo.color = "#F9FAFB";
-    styles.navLink.color = "#9CA3AF";
-    styles.activeNavLink.color = "#818CF8";
-    styles.activeIndicator.backgroundColor = "#818CF8";
-    styles.content.backgroundColor = "#111827";
-    styles.contentInner.backgroundColor = "#1F2937";
-    styles.pageTitle.color = "#F9FAFB";
-    styles.pageTitle.borderBottom = "1px solid #374151";
-    styles.footer.backgroundColor = "#111827";
-    styles.footer.borderTop = "1px solid #374151";
-    styles.footer.color = "#9CA3AF";
-  }
-
-  // navigation links configuration
   const navLinks = [
-    { name: "Home", path: "/", key: "home" },
-    { name: "Explore", path: "/explore", key: "explore" },
-    { name: "Meal Planner", path: "/meal-planner", key: "meal-planner" },
-    { name: "Shopping List", path: "/shopping-list", key: "shopping-list" },
-    { name: "Saved", path: "/saved", key: "saved" },
-    { name: "AI Assistant", path: "/chatbot", key: "chatbot" },
-    { name: "Profile", path: "/profile", key: "profile" },
+    { name: "Home", path: "/", key: "home", icon: "home" },
+    { name: "Explore", path: "/explore", key: "explore", icon: "compass" },
+    {
+      name: "Meal Planner",
+      path: "/meal-planner",
+      key: "meal-planner",
+      icon: "calendar",
+    },
+    {
+      name: "Shopping List",
+      path: "/shopping-list",
+      key: "shopping-list",
+      icon: "shopping-cart",
+    },
+    { name: "Saved", path: "/saved", key: "saved", icon: "bookmark" },
+    { name: "Profile", path: "/profile", key: "profile", icon: "user" },
   ];
 
   return (
     <div style={styles.container}>
-      {/* header with logo and navigation */}
       <header style={styles.header}>
         <Link href="/" asChild>
-          <div style={styles.logo}>
+          <div style={styles.logoContainer}>
             <div style={styles.logoIcon}>
               <WebIcon name="utensils" />
             </div>
@@ -174,47 +214,30 @@ export default function WebLayout({
           </div>
         </Link>
 
-        {/* navigation menu */}
+        {/* Mobile menu button (hidden by default) */}
+        <button style={styles.mobileMenuButton}>
+          <WebIcon name="bars" size={20} />
+        </button>
+
         <nav style={styles.nav}>
-          <Link href="/" asChild>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                color:
-                  currentTab === "home"
-                    ? "#4F46E5"
-                    : isDark
-                    ? "#E5E7EB"
-                    : "#4B5563",
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
-            >
-              <WebIcon name="home" />
-              <span>Home</span>
-            </div>
-          </Link>
-          {/* rest of navigation links */}
-          {navLinks.slice(1).map((link) => (
+          {navLinks.map((link) => (
             <Link key={link.key} href={link.path} asChild>
               <div
                 style={{
-                  color:
-                    currentTab === link.key
-                      ? "#4F46E5"
-                      : isDark
-                      ? "#E5E7EB"
-                      : "#4B5563",
-                  fontWeight: currentTab === link.key ? 600 : 500,
-                  fontSize: "0.95rem",
-                  padding: "0.5rem 0",
-                  position: "relative" as const,
-                  cursor: "pointer",
+                  ...styles.navLink,
+                  ...(currentTab === link.key ? styles.activeNavLink : {}),
                 }}
               >
-                {link.name}
+                <WebIcon
+                  name={link.icon}
+                  size={16}
+                  color={
+                    currentTab === link.key
+                      ? theme.colors.primary
+                      : theme.colors.textSecondary
+                  }
+                />
+                <span>{link.name}</span>
                 {currentTab === link.key && (
                   <div style={styles.activeIndicator}></div>
                 )}
@@ -224,23 +247,59 @@ export default function WebLayout({
         </nav>
       </header>
 
-      {/* main content area */}
       <main style={styles.content}>
         <div style={styles.contentInner}>
           <h1 style={styles.pageTitle}>{title}</h1>
-          {children}
+          <div
+            style={{
+              overflowY: "auto" as const,
+              height: "calc(100% - 80px)", // Subtract page title height
+              paddingRight: "8px", // Add padding for scrollbar
+            }}
+          >
+            {children}
+          </div>
         </div>
       </main>
 
-      {/* footer with copyright */}
       <footer style={styles.footer}>
-        <p style={styles.footerText}>
+        <p style={{ margin: 0 }}>
           &copy; {new Date().getFullYear()} IngrediQuest. All rights reserved.
         </p>
       </footer>
 
-      {/* show chat button except on chatbot page */}
-      {currentTab !== "chatbot" && <FloatingChatButton isDark={isDark} />}
+      <FloatingChatButton />
+
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 1024px) {
+          nav {
+            display: none !important;
+          }
+          [style*="mobileMenuButton"] {
+            display: block !important;
+          }
+        }
+        @media (min-width: 1025px) {
+          [style*="mobileMenuButton"] {
+            display: none !important;
+          }
+        }
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: ${isDark ? "#27272a" : "#f1f1f1"};
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: ${isDark ? "#4b5563" : "#c7c7c7"};
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: ${isDark ? "#6b7280" : "#a3a3a3"};
+        }
+      `}</style>
     </div>
   );
 }

@@ -22,6 +22,7 @@ import WebIcon from "../components/WebIcon";
 import { useShoppingList } from "../../src/context/ShoppingListContext";
 import { useUserPreferences } from "../../src/context/UserPreferencesContext";
 
+// Styled components for consistent styling
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTextInput = styled(TextInput);
@@ -29,8 +30,10 @@ const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledSafeAreaView = styled(SafeAreaView);
 const StyledScrollView = styled(ScrollView);
 
+// Get screen dimensions for responsive layout
 const { width } = Dimensions.get("window");
 
+// Type definitions for shopping list data structures
 interface ShoppingItem {
   id: number;
   originalName: string;
@@ -45,27 +48,31 @@ interface RecipeShoppingList {
   ingredients: ShoppingItem[];
 }
 
+// ShoppingList component for managing shopping lists
 export default function ShoppingList() {
+  // State management
   const [newListName, setNewListName] = useState("");
   const [newItemName, setNewItemName] = useState("");
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
+
+  // Theme and platform preferences
   const { preferences } = useUserPreferences();
   const isDark = preferences.isDarkMode;
-  const isWeb = Platform.OS === 'web';
+  const isWeb = Platform.OS === "web";
 
-  // Use the shopping list context
-  const { 
-    shoppingLists, 
-    addList, 
-    addItemToList, 
-    toggleItem, 
-    removeList, 
-    removeItem, 
+  // Use shopping list context for data management
+  const {
+    shoppingLists,
+    addList,
+    addItemToList,
+    toggleItem,
+    removeList,
+    removeItem,
     clearCheckedItems,
-    isLoading 
+    isLoading,
   } = useShoppingList();
 
-  // Add a new shopping list
+  // Handler for adding a new shopping list
   const handleAddNewList = async () => {
     if (newListName.trim()) {
       const newListId = await addList(newListName.trim());
@@ -76,7 +83,7 @@ export default function ShoppingList() {
     }
   };
 
-  // Add an item to a shopping list
+  // Handler for adding an item to a shopping list
   const handleAddItemToList = async (recipeId: number) => {
     if (newItemName.trim()) {
       await addItemToList(recipeId, newItemName.trim());
@@ -84,165 +91,224 @@ export default function ShoppingList() {
     }
   };
 
-  // Remove a shopping list with confirmation
+  // Handler for removing a shopping list with confirmation
   const handleRemoveList = async (recipeId: number) => {
-    Alert.alert(
-      "Delete List",
-      "Are you sure you want to delete this shopping list?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            await removeList(recipeId);
-            if (selectedListId === recipeId) {
-              setSelectedListId(null);
-            }
+    if (isWeb) {
+      // Web confirmation dialog
+      if (
+        window.confirm("Are you sure you want to delete this shopping list?")
+      ) {
+        await removeList(recipeId);
+        if (selectedListId === recipeId) {
+          setSelectedListId(null);
+        }
+      }
+    } else {
+      // Mobile confirmation dialog
+      Alert.alert(
+        "Delete List",
+        "Are you sure you want to delete this shopping list?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
           },
-        },
-      ]
-    );
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              await removeList(recipeId);
+              if (selectedListId === recipeId) {
+                setSelectedListId(null);
+              }
+            },
+          },
+        ]
+      );
+    }
   };
 
   // Web-specific rendering
   if (isWeb) {
     return (
       <WebLayout title="Shopping List" currentTab="shopping-list">
-        <div style={{ 
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1.5rem'
-        }}>
-          {/* Add New List */}
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column',
-            gap: '1rem',
-            backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            marginBottom: '1rem'
-          }}>
-            <h3 style={{ 
-              fontSize: '1.125rem', 
-              fontWeight: 600, 
-              marginBottom: '0.5rem',
-              color: isDark ? '#F9FAFB' : '#111827',
-            }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+          }}
+        >
+          {/* Add New List Section */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              backgroundColor: isDark ? "#1F2937" : "#F9FAFB",
+              padding: "1.5rem",
+              borderRadius: "0.75rem",
+              marginBottom: "1rem",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "1.125rem",
+                fontWeight: 600,
+                marginBottom: "0.5rem",
+                color: isDark ? "#F9FAFB" : "#111827",
+              }}
+            >
               Create a New Shopping List
             </h3>
-            <div style={{ 
-              display: 'flex', 
-              gap: '0.75rem' 
-            }}>
+            {/* New List Input Form */}
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+              }}
+            >
               <input
                 type="text"
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddNewList()}
+                onKeyPress={(e) => e.key === "Enter" && handleAddNewList()}
                 placeholder="Enter list name (e.g., Weekly Groceries)"
                 style={{
                   flex: 1,
-                  padding: '0.75rem 1rem',
-                  borderRadius: '0.5rem',
-                  border: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                  backgroundColor: isDark ? '#111827' : '#FFFFFF',
-                  color: isDark ? '#F9FAFB' : '#111827',
-                  fontSize: '0.95rem',
+                  padding: "0.75rem 1rem",
+                  borderRadius: "0.5rem",
+                  border: "1px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                  backgroundColor: isDark ? "#111827" : "#FFFFFF",
+                  color: isDark ? "#F9FAFB" : "#111827",
+                  fontSize: "0.95rem",
                 }}
               />
               <button
                 onClick={handleAddNewList}
                 style={{
-                  padding: '0.75rem 1.25rem',
-                  borderRadius: '0.5rem',
-                  backgroundColor: '#4F46E5',
-                  color: 'white',
+                  padding: "0.75rem 1.25rem",
+                  borderRadius: "0.5rem",
+                  backgroundColor: "#4F46E5",
+                  color: "white",
                   fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer',
+                  border: "none",
+                  cursor: "pointer",
                 }}
               >
                 Create
               </button>
             </div>
           </div>
-          
-          {/* Loading Indicator */}
+
+          {/* Loading State */}
           {isLoading && (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              padding: '2rem' 
-            }}>
-              <div style={{ 
-                display: 'inline-block',
-                width: '2rem',
-                height: '2rem',
-                border: '3px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                borderRadius: '50%',
-                borderTopColor: '#4F46E5',
-                animation: 'spin 1s linear infinite',
-              }}></div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "2rem",
+              }}
+            >
+              <div
+                style={{
+                  display: "inline-block",
+                  width: "2rem",
+                  height: "2rem",
+                  border: "3px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                  borderRadius: "50%",
+                  borderTopColor: "#4F46E5",
+                  animation: "spin 1s linear infinite",
+                }}
+              ></div>
             </div>
           )}
-          
-          {/* Shopping Lists */}
+
+          {/* Empty State or Shopping Lists */}
           {!isLoading && shoppingLists.length === 0 ? (
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              padding: '3rem 0',
-              color: isDark ? '#9CA3AF' : '#6B7280',
-            }}>
-              <WebIcon name="shopping-basket" size={40} style={{ marginBottom: '1rem' }} />
-              <p style={{ fontSize: '1.125rem', fontWeight: 500, marginBottom: '0.5rem' }}>No shopping lists yet</p>
+            // Empty State Display
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "3rem 0",
+                color: isDark ? "#9CA3AF" : "#6B7280",
+              }}
+            >
+              <WebIcon
+                name="shopping-basket"
+                size={40}
+                style={{ marginBottom: "1rem" }}
+              />
+              <p
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: 500,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                No shopping lists yet
+              </p>
               <p>Create a new list to get started</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            // Shopping Lists Display
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.5rem",
+              }}
+            >
               {shoppingLists.map((recipe) => (
-                <div 
+                // Individual Shopping List Card
+                <div
                   key={recipe.recipeId}
                   style={{
-                    borderRadius: '0.75rem',
-                    overflow: 'hidden',
-                    backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-                    border: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                    borderRadius: "0.75rem",
+                    overflow: "hidden",
+                    backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
+                    border: "1px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                   }}
                 >
-                  {/* List Header */}
-                  <div style={{ 
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '1rem 1.25rem',
-                    borderBottom: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                  }}>
+                  {/* List Header with Actions */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "1rem 1.25rem",
+                      borderBottom:
+                        "1px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                    }}
+                  >
+                    {/* List Title and Count */}
                     <div>
-                      <h4 style={{ 
-                        fontSize: '1.125rem', 
-                        fontWeight: 600, 
-                        color: isDark ? '#F9FAFB' : '#111827',
-                      }}>
+                      <h4
+                        style={{
+                          fontSize: "1.125rem",
+                          fontWeight: 600,
+                          color: isDark ? "#F9FAFB" : "#111827",
+                        }}
+                      >
                         {recipe.recipeName}
                       </h4>
-                      <p style={{ 
-                        fontSize: '0.875rem',
-                        color: isDark ? '#9CA3AF' : '#6B7280',
-                      }}>
+                      <p
+                        style={{
+                          fontSize: "0.875rem",
+                          color: isDark ? "#9CA3AF" : "#6B7280",
+                        }}
+                      >
                         {recipe.ingredients.length} items
                       </p>
                     </div>
-                    
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+
+                    {/* List Action Buttons */}
+                    <div style={{ display: "flex", gap: "0.75rem" }}>
+                      {/* Toggle List Visibility Button */}
                       <button
                         onClick={() => {
                           if (selectedListId === recipe.recipeId) {
@@ -252,148 +318,201 @@ export default function ShoppingList() {
                           }
                         }}
                         style={{
-                          padding: '0.5rem',
-                          borderRadius: '0.375rem',
-                          backgroundColor: isDark ? '#374151' : '#F3F4F6',
-                          color: isDark ? '#E5E7EB' : '#4B5563',
-                          border: 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          padding: "0.5rem",
+                          borderRadius: "0.375rem",
+                          backgroundColor: isDark ? "#374151" : "#F3F4F6",
+                          color: isDark ? "#E5E7EB" : "#4B5563",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        <i className={`fas fa-${selectedListId === recipe.recipeId ? 'chevron-up' : 'chevron-down'}`}></i>
+                        <i
+                          className={`fas fa-${
+                            selectedListId === recipe.recipeId
+                              ? "chevron-up"
+                              : "chevron-down"
+                          }`}
+                        ></i>
                       </button>
-                      
+
+                      {/* Delete List Button */}
                       <button
                         onClick={() => handleRemoveList(recipe.recipeId)}
                         style={{
-                          padding: '0.5rem',
-                          borderRadius: '0.375rem',
-                          backgroundColor: isDark ? '#7F1D1D' : '#FEE2E2',
-                          color: isDark ? '#FECACA' : '#B91C1C',
-                          border: 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          padding: "0.5rem",
+                          borderRadius: "0.375rem",
+                          backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                          color: isDark ? "#FECACA" : "#B91C1C",
+                          border: "none",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
                         <WebIcon name="trash-alt" />
                       </button>
                     </div>
                   </div>
-                  
-                  {/* List Items */}
+
+                  {/* List Items Section (Expanded View) */}
                   {selectedListId === recipe.recipeId && (
                     <div>
                       {/* Add Item Form */}
-                      <div style={{ 
-                        display: 'flex', 
-                        padding: '1rem 1.25rem',
-                        borderBottom: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                        gap: '0.75rem',
-                      }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          padding: "1rem 1.25rem",
+                          borderBottom:
+                            "1px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                          gap: "0.75rem",
+                        }}
+                      >
                         <input
                           type="text"
                           value={newItemName}
                           onChange={(e) => setNewItemName(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleAddItemToList(recipe.recipeId)}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" &&
+                            handleAddItemToList(recipe.recipeId)
+                          }
                           placeholder="Add an item"
                           style={{
                             flex: 1,
-                            padding: '0.625rem 0.875rem',
-                            borderRadius: '0.375rem',
-                            border: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                            backgroundColor: isDark ? '#111827' : '#FFFFFF',
-                            color: isDark ? '#F9FAFB' : '#111827',
-                            fontSize: '0.875rem',
+                            padding: "0.625rem 0.875rem",
+                            borderRadius: "0.375rem",
+                            border:
+                              "1px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                            backgroundColor: isDark ? "#111827" : "#FFFFFF",
+                            color: isDark ? "#F9FAFB" : "#111827",
+                            fontSize: "0.875rem",
                           }}
                         />
                         <button
                           onClick={() => handleAddItemToList(recipe.recipeId)}
                           style={{
-                            padding: '0.625rem 1rem',
-                            borderRadius: '0.375rem',
-                            backgroundColor: '#4F46E5',
-                            color: 'white',
+                            padding: "0.625rem 1rem",
+                            borderRadius: "0.375rem",
+                            backgroundColor: "#4F46E5",
+                            color: "white",
                             fontWeight: 500,
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '0.875rem',
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "0.875rem",
                           }}
                         >
                           <WebIcon name="plus" />
                           Add
                         </button>
                       </div>
-                      
+
                       {/* Items List */}
-                      <div style={{ padding: '0.5rem 0' }}>
+                      <div style={{ padding: "0.5rem 0" }}>
                         {recipe.ingredients.length === 0 ? (
-                          <div style={{ 
-                            padding: '1.5rem', 
-                            textAlign: 'center',
-                            color: isDark ? '#9CA3AF' : '#6B7280',
-                          }}>
+                          // Empty List Message
+                          <div
+                            style={{
+                              padding: "1.5rem",
+                              textAlign: "center",
+                              color: isDark ? "#9CA3AF" : "#6B7280",
+                            }}
+                          >
                             <p>No items in this list yet</p>
                           </div>
                         ) : (
+                          // List Items
                           recipe.ingredients.map((item) => (
-                            <div 
+                            <div
                               key={item.id}
                               style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                padding: '0.75rem 1.25rem',
-                                borderBottom: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
+                                display: "flex",
+                                alignItems: "center",
+                                padding: "0.75rem 1.25rem",
+                                borderBottom:
+                                  "1px solid " +
+                                  (isDark ? "#374151" : "#E5E7EB"),
                               }}
                             >
+                              {/* Item Checkbox */}
                               <button
-                                onClick={() => toggleItem(recipe.recipeId, item.id)}
+                                onClick={() =>
+                                  toggleItem(recipe.recipeId, item.id)
+                                }
                                 style={{
-                                  width: '1.5rem',
-                                  height: '1.5rem',
-                                  borderRadius: '0.375rem',
-                                  marginRight: '0.75rem',
-                                  backgroundColor: item.checked ? '#10B981' : 'transparent',
-                                  border: item.checked ? 'none' : '1px solid ' + (isDark ? '#6B7280' : '#D1D5DB'),
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  cursor: 'pointer',
+                                  width: "1.5rem",
+                                  height: "1.5rem",
+                                  borderRadius: "0.375rem",
+                                  marginRight: "0.75rem",
+                                  backgroundColor: item.checked
+                                    ? "#10B981"
+                                    : "transparent",
+                                  border: item.checked
+                                    ? "none"
+                                    : "1px solid " +
+                                      (isDark ? "#6B7280" : "#D1D5DB"),
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
                                 }}
                               >
-                                {item.checked && <WebIcon name="check" style={{ color: 'white', fontSize: '0.75rem' }} />}
+                                {item.checked && (
+                                  <WebIcon
+                                    name="check"
+                                    style={{
+                                      color: "white",
+                                      fontSize: "0.75rem",
+                                    }}
+                                  />
+                                )}
                               </button>
-                              
-                              <span style={{ 
-                                flex: 1,
-                                textDecoration: item.checked ? 'line-through' : 'none',
-                                color: item.checked ? (isDark ? '#6B7280' : '#9CA3AF') : (isDark ? '#E5E7EB' : '#111827'),
-                              }}>
+
+                              {/* Item Name */}
+                              <span
+                                style={{
+                                  flex: 1,
+                                  textDecoration: item.checked
+                                    ? "line-through"
+                                    : "none",
+                                  color: item.checked
+                                    ? isDark
+                                      ? "#6B7280"
+                                      : "#9CA3AF"
+                                    : isDark
+                                    ? "#E5E7EB"
+                                    : "#111827",
+                                }}
+                              >
                                 {item.originalName}
                               </span>
-                              
+
+                              {/* Item Amount and Unit */}
                               {item.amount && item.unit && (
-                                <span style={{ 
-                                  marginRight: '0.75rem',
-                                  color: isDark ? '#9CA3AF' : '#6B7280',
-                                  fontSize: '0.875rem',
-                                }}>
+                                <span
+                                  style={{
+                                    marginRight: "0.75rem",
+                                    color: isDark ? "#9CA3AF" : "#6B7280",
+                                    fontSize: "0.875rem",
+                                  }}
+                                >
                                   {item.amount} {item.unit}
                                 </span>
                               )}
-                              
+
+                              {/* Delete Item Button */}
                               <button
-                                onClick={() => removeItem(recipe.recipeId, item.id)}
+                                onClick={() =>
+                                  removeItem(recipe.recipeId, item.id)
+                                }
                                 style={{
-                                  padding: '0.5rem',
-                                  backgroundColor: 'transparent',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  color: isDark ? '#9CA3AF' : '#6B7280',
+                                  padding: "0.5rem",
+                                  backgroundColor: "transparent",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: isDark ? "#9CA3AF" : "#6B7280",
                                 }}
                               >
                                 <WebIcon name="times" />
@@ -402,31 +521,45 @@ export default function ShoppingList() {
                           ))
                         )}
                       </div>
-                      
-                      {/* List Footer */}
-                      <div style={{ 
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '1rem 1.25rem',
-                        backgroundColor: isDark ? '#111827' : '#F9FAFB',
-                        borderTop: '1px solid ' + (isDark ? '#374151' : '#E5E7EB'),
-                      }}>
-                        <span style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}>
-                          {recipe.ingredients.filter(i => i.checked).length} of {recipe.ingredients.length} completed
+
+                      {/* List Footer with Actions */}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "1rem 1.25rem",
+                          backgroundColor: isDark ? "#111827" : "#F9FAFB",
+                          borderTop:
+                            "1px solid " + (isDark ? "#374151" : "#E5E7EB"),
+                        }}
+                      >
+                        {/* Completion Status */}
+                        <span style={{ color: isDark ? "#9CA3AF" : "#6B7280" }}>
+                          {recipe.ingredients.filter((i) => i.checked).length}{" "}
+                          of {recipe.ingredients.length} completed
                         </span>
-                        
+
+                        {/* Clear Completed Items Button */}
                         <button
                           onClick={() => clearCheckedItems(recipe.recipeId)}
-                          disabled={!recipe.ingredients.some(i => i.checked)}
+                          disabled={!recipe.ingredients.some((i) => i.checked)}
                           style={{
-                            padding: '0.5rem 0.75rem',
-                            borderRadius: '0.375rem',
-                            backgroundColor: recipe.ingredients.some(i => i.checked) ? '#4F46E5' : '#E5E7EB',
-                            color: recipe.ingredients.some(i => i.checked) ? 'white' : '#9CA3AF',
-                            border: 'none',
-                            cursor: recipe.ingredients.some(i => i.checked) ? 'pointer' : 'not-allowed',
-                            fontSize: '0.875rem',
+                            padding: "0.5rem 0.75rem",
+                            borderRadius: "0.375rem",
+                            backgroundColor: recipe.ingredients.some(
+                              (i) => i.checked
+                            )
+                              ? "#4F46E5"
+                              : "#E5E7EB",
+                            color: recipe.ingredients.some((i) => i.checked)
+                              ? "white"
+                              : "#9CA3AF",
+                            border: "none",
+                            cursor: recipe.ingredients.some((i) => i.checked)
+                              ? "pointer"
+                              : "not-allowed",
+                            fontSize: "0.875rem",
                             fontWeight: 500,
                           }}
                         >
@@ -443,9 +576,10 @@ export default function ShoppingList() {
       </WebLayout>
     );
   }
-  
+
   // Mobile rendering
   return (
+    // Safe area container with dark mode support
     <StyledSafeAreaView
       className={`flex-1 ${isDark ? "bg-gray-900 mb-12" : "bg-gray-50 mb-12"}`}
       style={{
@@ -453,7 +587,7 @@ export default function ShoppingList() {
       }}
     >
       <StyledScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Header with search bar */}
+        {/* Header Section with Gradient Background */}
         <StyledView className="relative">
           <LinearGradient
             colors={
@@ -465,6 +599,7 @@ export default function ShoppingList() {
             end={{ x: 1, y: 1 }}
             className="pt-8 pb-16 rounded-b-3xl"
           >
+            {/* Decorative Background Elements */}
             <StyledView className="absolute inset-0" style={{ opacity: 0.1 }}>
               {[...Array(20)].map((_, i) => (
                 <StyledView
@@ -481,6 +616,7 @@ export default function ShoppingList() {
               ))}
             </StyledView>
 
+            {/* Header Content */}
             <StyledView className="px-5">
               <StyledView className="flex-row items-center justify-between mb-6">
                 <StyledView>
@@ -492,12 +628,13 @@ export default function ShoppingList() {
                   </StyledText>
                 </StyledView>
 
+                {/* Shopping Basket Icon */}
                 <StyledTouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
                   <FontAwesome5 name="shopping-basket" size={16} color="#fff" />
                 </StyledTouchableOpacity>
               </StyledView>
 
-              {/* Add new list input */}
+              {/* Add New List Input */}
               <StyledView
                 className={`rounded-xl overflow-hidden flex-row items-center bg-white/20 px-4 py-3`}
               >
@@ -539,6 +676,7 @@ export default function ShoppingList() {
               </StyledText>
             </StyledView>
           ) : shoppingLists.length === 0 ? (
+            // Empty State
             <StyledView
               className={`p-8 rounded-xl shadow-md items-center justify-center ${
                 isDark ? "bg-gray-800" : "bg-white"
@@ -572,8 +710,10 @@ export default function ShoppingList() {
               </StyledText>
             </StyledView>
           ) : (
+            // Shopping Lists Display
             <StyledView className="mt-2 space-y-4">
               {shoppingLists.map((recipe) => (
+                // Individual Shopping List Card
                 <StyledView
                   key={recipe.recipeId}
                   className={`rounded-xl overflow-hidden shadow-lg ${
@@ -587,6 +727,7 @@ export default function ShoppingList() {
                     elevation: 5,
                   }}
                 >
+                  {/* List Header */}
                   <StyledView className="px-4 py-5 border-b border-gray-200">
                     <StyledView className="flex-row justify-between items-center">
                       <StyledView className="flex-row items-center">
@@ -611,7 +752,9 @@ export default function ShoppingList() {
                         </StyledText>
                       </StyledView>
 
+                      {/* List Action Buttons */}
                       <StyledView className="flex-row">
+                        {/* Clear Completed Button */}
                         <StyledTouchableOpacity
                           onPress={() => clearCheckedItems(recipe.recipeId)}
                           className="p-2 mr-2"
@@ -622,6 +765,7 @@ export default function ShoppingList() {
                             color={isDark ? "#818CF8" : "#6366F1"}
                           />
                         </StyledTouchableOpacity>
+                        {/* Add Item Button */}
                         <StyledTouchableOpacity
                           onPress={() => setSelectedListId(recipe.recipeId)}
                           className="p-2 mr-2"
@@ -632,6 +776,7 @@ export default function ShoppingList() {
                             color={isDark ? "#818CF8" : "#6366F1"}
                           />
                         </StyledTouchableOpacity>
+                        {/* Delete List Button */}
                         <StyledTouchableOpacity
                           onPress={() => handleRemoveList(recipe.recipeId)}
                           className="p-2"
@@ -645,6 +790,7 @@ export default function ShoppingList() {
                       </StyledView>
                     </StyledView>
 
+                    {/* Add Item Form */}
                     {selectedListId === recipe.recipeId && (
                       <StyledView className="flex-row items-center mt-4">
                         <StyledTextInput
@@ -657,7 +803,9 @@ export default function ShoppingList() {
                           placeholderTextColor={isDark ? "#9CA3AF" : "#6B7280"}
                           value={newItemName}
                           onChangeText={setNewItemName}
-                          onSubmitEditing={() => handleAddItemToList(recipe.recipeId)}
+                          onSubmitEditing={() =>
+                            handleAddItemToList(recipe.recipeId)
+                          }
                         />
                         <StyledTouchableOpacity
                           className="p-3 rounded-xl"
@@ -672,8 +820,10 @@ export default function ShoppingList() {
                     )}
                   </StyledView>
 
+                  {/* List Items */}
                   <StyledView className="p-4">
                     {recipe.ingredients.length === 0 ? (
+                      // Empty List Message
                       <StyledView className="py-4 items-center">
                         <StyledText
                           className={isDark ? "text-gray-400" : "text-gray-500"}
@@ -682,11 +832,13 @@ export default function ShoppingList() {
                         </StyledText>
                       </StyledView>
                     ) : (
+                      // List Items
                       recipe.ingredients.map((item) => (
                         <StyledView
                           key={item.id}
                           className="flex-row items-center py-3 border-b border-gray-200 last:border-b-0"
                         >
+                          {/* Item Checkbox */}
                           <StyledTouchableOpacity
                             onPress={() => toggleItem(recipe.recipeId, item.id)}
                             className="mr-3"
@@ -710,6 +862,7 @@ export default function ShoppingList() {
                             </StyledView>
                           </StyledTouchableOpacity>
 
+                          {/* Item Name */}
                           <StyledText
                             className={`flex-1 ${
                               item.checked
@@ -722,6 +875,7 @@ export default function ShoppingList() {
                             {item.originalName}
                           </StyledText>
 
+                          {/* Item Amount and Unit */}
                           {item.amount && item.unit && (
                             <StyledText
                               className={`mr-3 ${
@@ -732,6 +886,7 @@ export default function ShoppingList() {
                             </StyledText>
                           )}
 
+                          {/* Delete Item Button */}
                           <StyledTouchableOpacity
                             onPress={() => removeItem(recipe.recipeId, item.id)}
                             className="p-2"
@@ -747,6 +902,7 @@ export default function ShoppingList() {
                     )}
                   </StyledView>
 
+                  {/* List Footer */}
                   <StyledView className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex-row justify-between items-center">
                     <StyledText
                       className={isDark ? "text-gray-300" : "text-gray-600"}

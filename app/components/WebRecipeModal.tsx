@@ -1,10 +1,7 @@
-// this component shows a recipe's details in a modal window
-// it includes the recipe image, ingredients, steps, and actions like save/share
-
 import React from "react";
 import WebIcon from "./WebIcon";
 
-// types for recipe data
+// Type definitions for recipe data structures
 interface Ingredient {
   id: number;
   originalName: string;
@@ -18,7 +15,6 @@ interface Step {
   ingredients: { name: string }[];
 }
 
-// full recipe details type
 interface RecipeDetail {
   id: number;
   title: string;
@@ -34,16 +30,17 @@ interface RecipeDetail {
   }[];
 }
 
-// props for the modal component
+// Props interface for WebRecipeModal component
 interface WebRecipeModalProps {
-  recipe: RecipeDetail | null; // recipe to display
-  visible: boolean; // whether modal is shown
-  onClose: () => void; // function to close modal
-  isSaved?: boolean; // if recipe is saved
-  onSaveToggle?: () => void; // function to save/unsave
-  onAddToShoppingList?: () => void; // function to add to shopping list
+  recipe: RecipeDetail | null; // Recipe data to display
+  visible: boolean; // Controls modal visibility
+  onClose: () => void; // Function to close the modal
+  isSaved?: boolean; // Flag indicating if recipe is saved
+  onSaveToggle?: () => void; // Function to toggle save state
+  onAddToShoppingList?: () => void; // Function to add ingredients to shopping list
 }
 
+// WebRecipeModal component for displaying detailed recipe information
 export default function WebRecipeModal({
   recipe,
   visible,
@@ -52,29 +49,31 @@ export default function WebRecipeModal({
   onSaveToggle,
   onAddToShoppingList,
 }: WebRecipeModalProps) {
-  // don't render if not visible or no recipe
+  // Don't render if modal is not visible or no recipe data
   if (!visible || !recipe) return null;
 
-  // get recipe data
+  // Extract recipe data
   const ingredients = recipe.extendedIngredients || [];
   const steps = recipe.analyzedInstructions?.[0]?.steps || [];
+  const hasTags = recipe.dishTypes?.length > 0 || recipe.diets?.length > 0;
 
-  // close modal when clicking outside
+  // Handle click outside modal to close
   const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  // check if dark mode is enabled
-  const prefersDarkMode =
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  // Get system dark mode preference
+  const prefersDarkMode = window.matchMedia(
+    "(prefers-color-scheme: dark)"
+  ).matches;
   const isDark = prefersDarkMode;
 
   return (
-    // modal overlay
+    // Modal overlay with backdrop blur
     <div
+      className="modal-overlay"
       style={{
         position: "fixed",
         top: 0,
@@ -87,27 +86,30 @@ export default function WebRecipeModal({
         alignItems: "center",
         zIndex: 1000,
         padding: "1rem",
+        backdropFilter: "blur(4px)",
       }}
       onClick={handleOutsideClick}
     >
-      {/* modal content container */}
+      {/* Modal container */}
       <div
+        className="modal-container"
         style={{
-          backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
-          borderRadius: "0.75rem",
+          backgroundColor: isDark ? "#1a1a1a" : "#ffffff",
+          borderRadius: "16px",
           width: "100%",
-          maxWidth: "800px",
+          maxWidth: "900px",
           maxHeight: "90vh",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+          boxShadow: "0 12px 28px rgba(0, 0, 0, 0.3)",
+          border: isDark ? "1px solid #333" : "1px solid #e5e5e5",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* recipe image and header info */}
+        {/* Recipe Header with Image */}
         <div style={{ position: "relative" }}>
-          <div style={{ height: "200px", overflow: "hidden" }}>
+          <div style={{ height: "250px", overflow: "hidden" }}>
             <img
               src={recipe.image}
               alt={recipe.title}
@@ -115,8 +117,10 @@ export default function WebRecipeModal({
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
+                objectPosition: "center",
               }}
             />
+            {/* Gradient overlay for better text visibility */}
             <div
               style={{
                 position: "absolute",
@@ -125,206 +129,202 @@ export default function WebRecipeModal({
                 right: 0,
                 bottom: 0,
                 background:
-                  "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.7) 100%)",
+                  "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.8) 100%)",
               }}
             />
           </div>
 
-          {/* close button */}
-          <button
-            onClick={onClose}
+          {/* Action buttons (close and save) */}
+          <div
             style={{
               position: "absolute",
-              top: "1rem",
-              right: "1rem",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              color: "white",
-              border: "none",
-              borderRadius: "9999px",
-              width: "2.5rem",
-              height: "2.5rem",
+              top: "16px",
+              right: "16px",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              zIndex: 10,
+              gap: "8px",
             }}
           >
-            <WebIcon name="times" />
-          </button>
-
-          {/* save recipe button */}
-          {onSaveToggle && (
+            {/* Close button */}
             <button
-              onClick={onSaveToggle}
+              onClick={onClose}
               style={{
-                padding: "0.75rem 1.25rem",
-                borderRadius: "0.5rem",
-                backgroundColor: isSaved
-                  ? isDark
-                    ? "#1F2937"
-                    : "#F3F4F6"
-                  : "#4F46E5",
-                color: isSaved ? (isDark ? "#E5E7EB" : "#4B5563") : "white",
-                fontWeight: 500,
-                border: isSaved
-                  ? `1px solid ${isDark ? "#374151" : "#D1D5DB"}`
-                  : "none",
-                cursor: "pointer",
+                backgroundColor: "rgba(0, 0, 0, 0.7)",
+                color: "white",
+                border: "none",
+                borderRadius: "50%",
+                width: "40px",
+                height: "40px",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                backdropFilter: "blur(4px)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
+                e.currentTarget.style.transform = "scale(1.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+                e.currentTarget.style.transform = "scale(1)";
               }}
             >
-              <WebIcon name="bookmark" />
-              {isSaved ? "Saved" : "Save Recipe"}
+              <WebIcon name="times" size={18} />
             </button>
-          )}
 
-          {/* recipe title and basic info */}
+            {/* Save button */}
+            {onSaveToggle && (
+              <button
+                onClick={onSaveToggle}
+                style={{
+                  backgroundColor: isSaved
+                    ? "rgba(255, 255, 255, 0.9)"
+                    : "rgba(79, 70, 229, 0.9)",
+                  color: isSaved ? (isDark ? "#1a1a1a" : "#333") : "white",
+                  border: "none",
+                  borderRadius: "20px",
+                  padding: "0 16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  backdropFilter: "blur(4px)",
+                  fontWeight: 500,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <WebIcon
+                  name={isSaved ? "bookmark-solid" : "bookmark"}
+                  size={16}
+                />
+                {isSaved ? "Saved" : "Save"}
+              </button>
+            )}
+          </div>
+
+          {/* Recipe title and metadata */}
           <div
             style={{
               position: "absolute",
               bottom: 0,
               left: 0,
               right: 0,
-              padding: "1.5rem",
+              padding: "24px",
               color: "white",
             }}
           >
             <h2
               style={{
-                fontSize: "1.5rem",
+                fontSize: "28px",
                 fontWeight: 700,
-                marginBottom: "0.5rem",
+                marginBottom: "8px",
+                lineHeight: 1.2,
+                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
               }}
             >
               {recipe.title}
             </h2>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              {recipe.cuisines && recipe.cuisines.length > 0 && (
+
+            {/* Recipe metadata (cuisine, time, servings) */}
+            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+              {recipe.cuisines?.length > 0 && (
                 <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                  }}
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  <i className="fas fa-globe"></i>
-                  <span>{recipe.cuisines.join(", ")}</span>
+                  <WebIcon
+                    name="globe"
+                    size={14}
+                    color="rgba(255,255,255,0.8)"
+                  />
+                  <span style={{ fontSize: "14px", opacity: 0.9 }}>
+                    {recipe.cuisines.join(", ")}
+                  </span>
                 </div>
               )}
+
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                }}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
               >
-                <i className="fas fa-clock"></i>
-                <span>{recipe.readyInMinutes} min</span>
+                <WebIcon name="clock" size={14} color="rgba(255,255,255,0.8)" />
+                <span style={{ fontSize: "14px", opacity: 0.9 }}>
+                  {recipe.readyInMinutes} min
+                </span>
               </div>
+
               <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                }}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
               >
-                <i className="fas fa-utensils"></i>
-                <span>{recipe.servings} servings</span>
+                <WebIcon name="users" size={14} color="rgba(255,255,255,0.8)" />
+                <span style={{ fontSize: "14px", opacity: 0.9 }}>
+                  {recipe.servings}{" "}
+                  {recipe.servings === 1 ? "serving" : "servings"}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* recipe details content */}
+        {/* Recipe content area */}
         <div
           style={{
             flex: 1,
-            padding: "1.5rem",
+            padding: "24px",
             overflowY: "auto",
-            color: isDark ? "#F9FAFB" : "#111827",
+            color: isDark ? "#f0f0f0" : "#333",
           }}
         >
-          {/* recipe tags and categories */}
-          {(recipe.dishTypes?.length > 0 || recipe.diets?.length > 0) && (
-            <div style={{ marginBottom: "1.5rem" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  marginBottom: "0.75rem",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "0.25rem 0.5rem",
-                    borderRadius: "0.375rem",
-                    backgroundColor: isDark
-                      ? "rgba(79, 70, 229, 0.2)"
-                      : "rgba(79, 70, 229, 0.1)",
-                    color: isDark ? "#818CF8" : "#4F46E5",
-                    fontSize: "0.875rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.25rem",
-                  }}
-                >
-                  <i className="fas fa-clock"></i>
-                  {recipe.readyInMinutes} mins
-                </div>
-                {recipe.servings && (
-                  <div
+          {/* Recipe tags section */}
+          {hasTags && (
+            <div style={{ marginBottom: "24px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {/* Dish type tags */}
+                {recipe.dishTypes?.map((type) => (
+                  <span
+                    key={`dish-${type}`}
                     style={{
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "0.375rem",
+                      padding: "4px 12px",
                       backgroundColor: isDark
                         ? "rgba(79, 70, 229, 0.2)"
                         : "rgba(79, 70, 229, 0.1)",
-                      color: isDark ? "#818CF8" : "#4F46E5",
-                      fontSize: "0.875rem",
+                      color: isDark ? "#a5b4fc" : "#4f46e5",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: 500,
                       display: "flex",
                       alignItems: "center",
-                      gap: "0.25rem",
+                      gap: "6px",
                     }}
                   >
-                    <i className="fas fa-utensils"></i>
-                    {recipe.servings} servings
-                  </div>
-                )}
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-                {recipe.dishTypes?.map((type, index) => (
-                  <span
-                    key={`dish-${index}`}
-                    style={{
-                      padding: "0.25rem 0.75rem",
-                      backgroundColor: isDark
-                        ? "rgba(79, 70, 229, 0.2)"
-                        : "rgba(79, 70, 229, 0.1)",
-                      color: isDark ? "#818CF8" : "#4F46E5",
-                      borderRadius: "9999px",
-                      fontSize: "0.75rem",
-                    }}
-                  >
+                    <WebIcon name="utensils" size={12} />
                     {type}
                   </span>
                 ))}
-                {recipe.diets?.map((diet, index) => (
+                {/* Diet tags */}
+                {recipe.diets?.map((diet) => (
                   <span
-                    key={`diet-${index}`}
+                    key={`diet-${diet}`}
                     style={{
-                      padding: "0.25rem 0.75rem",
+                      padding: "4px 12px",
                       backgroundColor: isDark
                         ? "rgba(16, 185, 129, 0.2)"
                         : "rgba(16, 185, 129, 0.1)",
-                      color: isDark ? "#34D399" : "#059669",
-                      borderRadius: "9999px",
-                      fontSize: "0.75rem",
+                      color: isDark ? "#6ee7b7" : "#059669",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
                     }}
                   >
+                    <WebIcon name="leaf" size={12} />
                     {diet}
                   </span>
                 ))}
@@ -332,52 +332,109 @@ export default function WebRecipeModal({
             </div>
           )}
 
-          {/* ingredients list */}
-          <div style={{ marginBottom: "2rem" }}>
-            <h3
+          {/* Ingredients section */}
+          <div style={{ marginBottom: "32px" }}>
+            <div
               style={{
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                marginBottom: "1rem",
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                gap: "0.5rem",
+                marginBottom: "16px",
               }}
             >
-              <WebIcon name="shopping-basket" color="#4F46E5" />
-              Ingredients
-            </h3>
-            <ul
+              <h3
+                style={{
+                  fontSize: "20px",
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <WebIcon
+                  name="ingredients"
+                  color={isDark ? "#a5b4fc" : "#4f46e5"}
+                />
+                Ingredients
+              </h3>
+              <span
+                style={{
+                  fontSize: "14px",
+                  color: isDark ? "#a1a1aa" : "#6b7280",
+                }}
+              >
+                {ingredients.length} items
+              </span>
+            </div>
+
+            {/* Ingredients grid */}
+            <div
               style={{
-                listStyle: "none",
-                padding: 0,
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                gap: "0.75rem",
+                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                gap: "12px",
+                marginBottom: "16px",
               }}
             >
               {ingredients.map((ingredient) => (
-                <li
+                <div
                   key={ingredient.id}
                   style={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    padding: "0.5rem",
-                    backgroundColor: isDark ? "#111827" : "#F9FAFB",
-                    borderRadius: "0.375rem",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    padding: "12px",
+                    backgroundColor: isDark ? "#252525" : "#f8f8f8",
+                    borderRadius: "8px",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = isDark
+                      ? "0 4px 6px rgba(0,0,0,0.2)"
+                      : "0 4px 6px rgba(0,0,0,0.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
                   }}
                 >
-                  <WebIcon name="check" color="#4F46E5" size={12} />
-                  <span>
-                    {ingredient.amount} {ingredient.unit}{" "}
-                    {ingredient.originalName}
-                  </span>
-                </li>
+                  <div
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "4px",
+                      backgroundColor: isDark ? "#4f46e5" : "#e0e7ff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <WebIcon
+                      name="check"
+                      size={10}
+                      color={isDark ? "#fff" : "#4f46e5"}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 500 }}>
+                      {ingredient.originalName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: isDark ? "#a1a1aa" : "#6b7280",
+                      }}
+                    >
+                      {ingredient.amount} {ingredient.unit}
+                    </div>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
 
-            {/* Add to Shopping List button */}
+            {/* Add to shopping list button */}
             {onAddToShoppingList && (
               <button
                 onClick={onAddToShoppingList}
@@ -385,58 +442,130 @@ export default function WebRecipeModal({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "0.5rem",
-                  padding: "0.75rem 1rem",
-                  backgroundColor: "#4F46E5",
+                  gap: "8px",
+                  padding: "12px 16px",
+                  backgroundColor: isDark ? "#4f46e5" : "#4f46e5",
                   color: "white",
                   border: "none",
-                  borderRadius: "0.375rem",
+                  borderRadius: "8px",
                   fontWeight: 500,
-                  marginTop: "1rem",
                   cursor: "pointer",
                   width: "100%",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = isDark
+                    ? "#6366f1"
+                    : "#4338ca";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#4f46e5";
                 }}
               >
-                <WebIcon name="shopping-cart" />
-                Add to Shopping List
+                <WebIcon name="cart-plus" size={16} />
+                Add All to Shopping List
               </button>
             )}
           </div>
 
-          {/* cooking steps */}
+          {/* Instructions section */}
           <div>
             <h3
               style={{
-                fontSize: "1.25rem",
+                fontSize: "20px",
                 fontWeight: 600,
-                marginBottom: "1rem",
+                marginBottom: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem",
+                gap: "8px",
               }}
             >
-              <WebIcon name="list-ol" color="#4F46E5" />
-              Instructions
+              <WebIcon
+                name="instructions"
+                color={isDark ? "#a5b4fc" : "#4f46e5"}
+              />
+              Cooking Instructions
             </h3>
-            <ol
-              style={{
-                paddingLeft: "1.5rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
+
+            {/* Steps list */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
               {steps.map((step) => (
-                <li key={step.number} style={{ marginBottom: "0.5rem" }}>
-                  <div style={{ fontWeight: 500, marginBottom: "0.25rem" }}>
-                    Step {step.number}
+                <div
+                  key={step.number}
+                  style={{
+                    display: "flex",
+                    gap: "16px",
+                    padding: "16px",
+                    backgroundColor: isDark ? "#252525" : "#f8f8f8",
+                    borderRadius: "12px",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow = isDark
+                      ? "0 4px 6px rgba(0,0,0,0.2)"
+                      : "0 4px 6px rgba(0,0,0,0.05)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  {/* Step number */}
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      backgroundColor: isDark ? "#4f46e5" : "#e0e7ff",
+                      color: isDark ? "#fff" : "#4f46e5",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      fontWeight: 600,
+                      fontSize: "14px",
+                    }}
+                  >
+                    {step.number}
                   </div>
-                  <div style={{ color: isDark ? "#D1D5DB" : "#4B5563" }}>
-                    {step.step}
+                  <div>
+                    {/* Step instructions */}
+                    <p style={{ lineHeight: 1.6 }}>{step.step}</p>
+                    {/* Step ingredients */}
+                    {step.ingredients?.length > 0 && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "8px",
+                          marginTop: "8px",
+                        }}
+                      >
+                        {step.ingredients.map((ingredient, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              padding: "2px 8px",
+                              backgroundColor: isDark
+                                ? "rgba(79, 70, 229, 0.2)"
+                                : "rgba(79, 70, 229, 0.1)",
+                              color: isDark ? "#a5b4fc" : "#4f46e5",
+                              borderRadius: "4px",
+                              fontSize: "12px",
+                            }}
+                          >
+                            {ingredient.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </li>
+                </div>
               ))}
-            </ol>
+            </div>
           </div>
         </div>
       </div>

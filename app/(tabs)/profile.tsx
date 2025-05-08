@@ -588,95 +588,6 @@ export default function ProfileScreen() {
             </div>
           </div>
 
-          {/* Help & Support */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <h3
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                color: "#4F46E5",
-                marginBottom: "0.75rem",
-                paddingLeft: "0.5rem",
-              }}
-            >
-              Help & Support
-            </h3>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                backgroundColor: isDark ? "#1F2937" : "#FFFFFF",
-                borderRadius: "0.75rem",
-                overflow: "hidden",
-              }}
-            >
-              {/* Setting Items */}
-              {[
-                {
-                  icon: "question-circle",
-                  title: "Help Center",
-                  color: "#8B5CF6",
-                },
-                {
-                  icon: "comment-alt",
-                  title: "Send Feedback",
-                  color: "#14B8A6",
-                },
-                { icon: "info-circle", title: "About Us", color: "#F97316" },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "1rem 1.25rem",
-                    borderBottom:
-                      index < 2
-                        ? `1px solid ${isDark ? "#374151" : "#E5E7EB"}`
-                        : "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "2.5rem",
-                      height: "2.5rem",
-                      borderRadius: "9999px",
-                      backgroundColor: item.color,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      marginRight: "1rem",
-                    }}
-                  >
-                    <i
-                      className={`fas fa-${item.icon}`}
-                      style={{ color: "white" }}
-                    ></i>
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        color: isDark ? "#F9FAFB" : "#111827",
-                      }}
-                    >
-                      {item.title}
-                    </div>
-                  </div>
-
-                  <i
-                    className="fas fa-chevron-right"
-                    style={{ color: isDark ? "#6B7280" : "#9CA3AF" }}
-                  ></i>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Logout Button */}
           <button
             onClick={logout}
@@ -693,33 +604,24 @@ export default function ProfileScreen() {
               fontWeight: 600,
               marginBottom: "2rem",
               gap: "0.5rem",
-            }}
-          >
-            <i className="fas fa-sign-out-alt"></i>
-            Logout
-          </button>
-          {/* Logout Button */}
-          <button
-            onClick={logout}
-            style={{
-              padding: "1rem",
-              backgroundColor: isDark ? "#991B1B" : "#EF4444",
-              color: "white",
-              borderRadius: "0.5rem",
-              border: "none",
-              cursor: "pointer",
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.5rem",
-              marginTop: "1rem",
-              marginBottom: "2rem",
               width: "100%",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.backgroundColor = isDark
+                ? "#7F1D1D"
+                : "#DC2626";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.backgroundColor = isDark
+                ? "#991B1B"
+                : "#EF4444";
             }}
           >
             <WebIcon name="sign-out-alt" />
-            Logout
+            <span>Logout</span>
           </button>
         </div>
       </WebLayout>
