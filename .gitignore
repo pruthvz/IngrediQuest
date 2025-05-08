@@ -50,5 +50,3 @@ app-example
 ./env.ts
 
 src/config/env.ts
-
-./requirements.md
