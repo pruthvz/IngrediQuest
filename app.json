@@ -1,27 +1,35 @@
 {
   "expo": {
-    "name": "ingrei",
-    "slug": "ingrei",
+    "name": "IngrediQuest",
+    "slug": "ingrediquest",
     "version": "1.0.0",
     "sdkVersion": "53.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "ingrediquest",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ingrediquest.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.ingrediquest.app"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./web/favicon.png",
+      "favicon": "./assets/images/favicon.png",
       "indexHtmlPath": "./web/index.html"
     },
     "plugins": [

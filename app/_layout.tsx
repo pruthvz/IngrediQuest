@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@/src/components/ThemeProvider";
-import { AuthProvider, useAuth } from "@/src/context/AuthContext";
+import { AuthProvider } from "@/src/context/AuthContext";
 import { SavedRecipesProvider } from "@/src/context/SavedRecipesContext";
 import { ShoppingListProvider } from "@/src/context/ShoppingListContext";
 import FontAwesomeScript from "./components/FontAwesomeScript";
@@ -8,7 +8,6 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
 import { UserPreferencesProvider } from "../src/context/UserPreferencesContext";
 import FloatingChatButton from "../src/components/FloatingChatButton";
 
@@ -19,31 +18,6 @@ export {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
-
-function RootLayoutNav() {
-  const { isAuthenticated } = useAuth();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  return (
-    <>
-      <FontAwesomeScript />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-          }}
-        />
-      </Stack>
-      {isAuthenticated && <FloatingChatButton />}
-    </>
-  );
-}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -66,16 +40,29 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <UserPreferencesProvider>
+    <AuthProvider>
+      <UserPreferencesProvider>
+        <ThemeProvider>
           <SavedRecipesProvider>
             <ShoppingListProvider>
-              <RootLayoutNav />
+              <>
+                <FontAwesomeScript />
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+                <FloatingChatButton />
+              </>
             </ShoppingListProvider>
           </SavedRecipesProvider>
-        </UserPreferencesProvider>
-      </AuthProvider>
-    </ThemeProvider>
+        </ThemeProvider>
+      </UserPreferencesProvider>
+    </AuthProvider>
   );
 }

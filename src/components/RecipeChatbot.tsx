@@ -17,8 +17,8 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { useUserPreferences } from "../context/UserPreferencesContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ENV } from '../config/env';
-
+import { ENV } from "../config/env";
+import OpenAI from "openai";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -26,6 +26,18 @@ const StyledTextInput = styled(TextInput);
 const StyledScrollView = styled(ScrollView);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledSafeAreaView = styled(SafeAreaView);
+
+// Initialize AI clients
+const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
+
+// Initialize OpenAI client only if API key is available
+let openai: OpenAI | null = null;
+if (ENV.OPENAI_API_KEY) {
+  openai = new OpenAI({
+    apiKey: ENV.OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true,
+  });
+}
 
 interface Message {
   id: string;
@@ -44,6 +56,231 @@ const INITIAL_MESSAGE: Message = {
   text: "Hello! I'm your personal recipe assistant. I can help you find recipes, answer cooking questions, and provide culinary tips. What would you like to know?",
   sender: "bot",
   timestamp: new Date(),
+};
+
+// Get AI response using Gemini with OpenAI fallback
+const getAIResponse = async (
+  userInput: string,
+  preferences: any
+): Promise<string> => {
+  const prompt = createPrompt(userInput, preferences);
+
+  try {
+    // Try Gemini first
+    return await getGeminiResponse(prompt);
+  } catch (geminiError: any) {
+    console.warn("Gemini API error:", geminiError);
+
+    // If Gemini fails and OpenAI key is available, try OpenAI
+    if (ENV.OPENAI_API_KEY) {
+      try {
+        return await getOpenAIResponse(prompt);
+      } catch (openaiError) {
+        console.error("OpenAI API error:", openaiError);
+        return generateFallbackResponse(userInput, preferences);
+      }
+    }
+
+    // If no OpenAI key or OpenAI fails, use fallback
+    return generateFallbackResponse(userInput, preferences);
+  }
+};
+
+// Create a consistent prompt format for both AI providers
+const createPrompt = (userInput: string, preferences: any): string => {
+  const {
+    dietaryPreferences,
+    cuisinePreferences,
+    cookingSkillLevel,
+    allergies,
+    restrictions,
+  } = preferences;
+
+  return (
+    `As a culinary expert, please help with this request: ${userInput}\n\n` +
+    `Consider these user preferences:\n` +
+    `- Dietary preferences: ${
+      dietaryPreferences.length ? dietaryPreferences.join(", ") : "None"
+    }\n` +
+    `- Allergies: ${allergies.length ? allergies.join(", ") : "None"}\n` +
+    `- Dietary restrictions: ${
+      restrictions.length ? restrictions.join(", ") : "None"
+    }\n` +
+    `- Preferred cuisines: ${
+      cuisinePreferences.length ? cuisinePreferences.join(", ") : "Any"
+    }\n` +
+    `- Cooking skill level: ${cookingSkillLevel}\n\n` +
+    `Please structure your response using these markers:\n` +
+    `[TITLE] for main sections\n` +
+    `[LIST] for bullet points\n` +
+    `[END] to end sections\n\n` +
+    `Make your response engaging, well-structured, and personalized to the user's preferences.`
+  );
+};
+
+// Get response from Gemini
+const getGeminiResponse = async (prompt: string): Promise<string> => {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-pro-002",
+    generationConfig: {
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1024,
+    },
+  });
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+
+  return formatAIResponse(text);
+};
+
+// Get response from OpenAI
+const getOpenAIResponse = async (prompt: string): Promise<string> => {
+  if (!openai) {
+    throw new Error("OpenAI client not initialized - API key missing");
+  }
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a helpful culinary expert assistant. Format your responses using [TITLE], [LIST], and [END] markers for sections and lists.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.7,
+    max_tokens: 1000,
+  });
+
+  const text = completion.choices[0]?.message?.content || "";
+  return formatAIResponse(text);
+};
+
+// Format AI response consistently
+const formatAIResponse = (text: string): string => {
+  const sections = [];
+  const parts = text.split(/\[TITLE\]|\[LIST\]/);
+
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i];
+    const content = part.split("[END]")[0].trim();
+
+    if (text.includes(`[LIST]${part}`)) {
+      sections.push({
+        content: content,
+        type: "list",
+      });
+    } else {
+      sections.push({
+        title: content,
+        content: "",
+        type: "normal",
+      });
+    }
+  }
+
+  return JSON.stringify({ text, sections });
+};
+
+// Generate a fallback response when API is unavailable
+const generateFallbackResponse = (
+  userInput: string,
+  userPreferences: any
+): string => {
+  const lowerCaseInput = userInput.toLowerCase();
+  let responseText = "";
+  let sections = [];
+
+  // Check for common recipe questions
+  if (
+    lowerCaseInput.includes("recipe") ||
+    lowerCaseInput.includes("how to make") ||
+    lowerCaseInput.includes("cook")
+  ) {
+    responseText =
+      "I'm currently experiencing high demand and can't generate a personalized recipe right now. Here are some general cooking tips instead:";
+
+    sections = [
+      {
+        title: "Cooking Tips",
+        content: "",
+        type: "normal",
+      },
+      {
+        content:
+          "- Always read the entire recipe before starting\n- Prep and measure ingredients before cooking (mise en place)\n- Taste and adjust seasoning as you cook\n- Let meat rest after cooking\n- Don't overcrowd the pan when sautéing",
+        type: "list",
+      },
+      {
+        title: "Try Again Later",
+        content:
+          "Please try again in a few minutes when our service might be less busy.",
+        type: "normal",
+      },
+    ];
+  }
+  // Check for ingredient questions
+  else if (
+    lowerCaseInput.includes("ingredient") ||
+    lowerCaseInput.includes("substitute")
+  ) {
+    responseText =
+      "I'm currently experiencing high demand and can't provide personalized ingredient advice right now. Here are some common substitutions:";
+
+    sections = [
+      {
+        title: "Common Ingredient Substitutions",
+        content: "",
+        type: "normal",
+      },
+      {
+        content:
+          "- Buttermilk: 1 cup milk + 1 tbsp lemon juice\n- Sour cream: Greek yogurt\n- Wine: Stock + vinegar\n- Fresh herbs: 1/3 amount dried herbs\n- Butter: Applesauce (in baking) or olive oil",
+        type: "list",
+      },
+      {
+        title: "Try Again Later",
+        content:
+          "Please try again in a few minutes when our service might be less busy.",
+        type: "normal",
+      },
+    ];
+  }
+  // Default response for other questions
+  else {
+    responseText =
+      "I'm currently experiencing high demand and can't provide a detailed response right now. Here's some general information that might help:";
+
+    sections = [
+      {
+        title: "General Cooking Advice",
+        content:
+          "The key to becoming a better cook is practice, experimentation, and learning basic techniques rather than just following recipes.",
+        type: "normal",
+      },
+      {
+        title: "Try Again Later",
+        content:
+          "Please try again in a few minutes when our service might be less busy.",
+        type: "normal",
+      },
+    ];
+  }
+
+  return JSON.stringify({ text: responseText, sections });
+};
+
+// Format timestamp for messages
+const formatTime = (date: Date) => {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
 export default function RecipeChatbot() {
@@ -80,10 +317,9 @@ export default function RecipeChatbot() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your actual API call to OpenAI or another AI service
-      const response = await getAIResponse(userMessage.text);
-
+      const response = await getAIResponse(userMessage.text, preferences);
       const parsedResponse = JSON.parse(response);
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: parsedResponse.text,
@@ -105,167 +341,6 @@ export default function RecipeChatbot() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Initialize Gemini API
-  const genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
-
-  // Get AI response using Gemini or fallback to predefined responses
-  const getAIResponse = async (userInput: string): Promise<string> => {
-    try {
-      const { dietaryPreferences, cuisinePreferences, cookingSkillLevel, allergies, restrictions } = preferences;
-      
-      // Create context-aware prompt with formatting instructions
-      const prompt = `As a culinary expert, please help with this request: ${userInput}\n\n` +
-        `Consider these user preferences:\n` +
-        `- Dietary preferences: ${dietaryPreferences.length ? dietaryPreferences.join(", ") : "None"}\n` +
-        `- Allergies: ${allergies.length ? allergies.join(", ") : "None"}\n` +
-        `- Dietary restrictions: ${restrictions.length ? restrictions.join(", ") : "None"}\n` +
-        `- Preferred cuisines: ${cuisinePreferences.length ? cuisinePreferences.join(", ") : "Any"}\n` +
-        `- Cooking skill level: ${cookingSkillLevel}\n\n` +
-        `Please tailor your response to match the user's skill level and preferences. For recipes:\n` +
-        `- Ensure all ingredients comply with dietary preferences and restrictions\n` +
-        `- Adjust complexity based on ${cookingSkillLevel} skill level\n` +
-        `- Include relevant tips for their skill level\n` +
-        `- Warn about potential allergens\n\n` +
-        `Please structure your response using these markers:\n` +
-        `[TITLE] for main sections\n` +
-        `[LIST] for bullet points\n` +
-        `[END] to end sections\n\n` +
-        `For example:\n` +
-        `[TITLE]Recipe Name[END]\n` +
-        `[TITLE]Ingredients[END]\n` +
-        `[LIST]- item 1\n- item 2[END]\n\n` +
-        `Make your response engaging, well-structured, and personalized to the user's preferences.`;
-
-      try {
-        // Try to generate content using Gemini
-        const model = genAI.getGenerativeModel({
-          model: "gemini-1.5-pro-002",
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          },
-        });
-
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        
-        // Parse the formatted response
-        const sections = [];
-        const parts = text.split(/\[TITLE\]|\[LIST\]/);
-        
-        for (let i = 1; i < parts.length; i++) {
-          const part = parts[i];
-          const content = part.split('[END]')[0].trim();
-          
-          if (text.includes(`[LIST]${part}`)) {
-            sections.push({
-              content: content,
-              type: 'list'
-            });
-          } else {
-            sections.push({
-              title: content,
-              content: '',
-              type: 'normal'
-            });
-          }
-        }
-        
-        return JSON.stringify({ text, sections });
-      } catch (apiError: any) {
-        // Check if this is a quota error (429)
-        const errorMessage = apiError.toString().toLowerCase();
-        if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate limit')) {
-          console.warn("Gemini API quota exceeded, using fallback response");
-          return generateFallbackResponse(userInput, preferences);
-        }
-        // For other API errors, rethrow
-        throw apiError;
-      }
-    } catch (error) {
-      console.error("Gemini API error:", error);
-      // Use fallback response for any error
-      return generateFallbackResponse(userInput, preferences);
-    }
-  };
-
-  // Generate a fallback response when API is unavailable
-  const generateFallbackResponse = (userInput: string, userPreferences: any): string => {
-    const lowerCaseInput = userInput.toLowerCase();
-    let responseText = "";
-    let sections = [];
-
-    // Check for common recipe questions
-    if (lowerCaseInput.includes('recipe') || lowerCaseInput.includes('how to make') || lowerCaseInput.includes('cook')) {
-      responseText = "I'm currently experiencing high demand and can't generate a personalized recipe right now. Here are some general cooking tips instead:";
-      
-      sections = [
-        {
-          title: "Cooking Tips",
-          content: "",
-          type: "normal"
-        },
-        {
-          content: "- Always read the entire recipe before starting\n- Prep and measure ingredients before cooking (mise en place)\n- Taste and adjust seasoning as you cook\n- Let meat rest after cooking\n- Don't overcrowd the pan when sautéing",
-          type: "list"
-        },
-        {
-          title: "Try Again Later",
-          content: "Please try again in a few minutes when our service might be less busy.",
-          type: "normal"
-        }
-      ];
-    } 
-    // Check for ingredient questions
-    else if (lowerCaseInput.includes('ingredient') || lowerCaseInput.includes('substitute')) {
-      responseText = "I'm currently experiencing high demand and can't provide personalized ingredient advice right now. Here are some common substitutions:";
-      
-      sections = [
-        {
-          title: "Common Ingredient Substitutions",
-          content: "",
-          type: "normal"
-        },
-        {
-          content: "- Buttermilk: 1 cup milk + 1 tbsp lemon juice\n- Sour cream: Greek yogurt\n- Wine: Stock + vinegar\n- Fresh herbs: 1/3 amount dried herbs\n- Butter: Applesauce (in baking) or olive oil",
-          type: "list"
-        },
-        {
-          title: "Try Again Later",
-          content: "Please try again in a few minutes when our service might be less busy.",
-          type: "normal"
-        }
-      ];
-    }
-    // Default response for other questions
-    else {
-      responseText = "I'm currently experiencing high demand and can't provide a detailed response right now. Here's some general information that might help:";
-      
-      sections = [
-        {
-          title: "General Cooking Advice",
-          content: "The key to becoming a better cook is practice, experimentation, and learning basic techniques rather than just following recipes.",
-          type: "normal"
-        },
-        {
-          title: "Try Again Later",
-          content: "Please try again in a few minutes when our service might be less busy.",
-          type: "normal"
-        }
-      ];
-    }
-
-    return JSON.stringify({ text: responseText, sections });
-  };
-
-  // Format timestamp for messages
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   return (
@@ -340,25 +415,31 @@ export default function RecipeChatbot() {
                     {message.sections.map((section, index) => (
                       <StyledView key={index} className="mb-3">
                         {section.title && (
-                          <StyledText 
-                            className={`text-lg font-bold mb-2 ${isDark ? "text-indigo-300" : "text-indigo-600"}`}
+                          <StyledText
+                            className={`text-lg font-bold mb-2 ${
+                              isDark ? "text-indigo-300" : "text-indigo-600"
+                            }`}
                           >
                             {section.title}
                           </StyledText>
                         )}
                         {section.type === "list" ? (
-                          section.content.split('\n').map((item, idx) => (
+                          section.content.split("\n").map((item, idx) => (
                             <StyledView key={idx} className="flex-row mb-1">
-                              <StyledText 
-                                className={`${isDark ? "text-gray-200" : "text-gray-800"}`}
+                              <StyledText
+                                className={`${
+                                  isDark ? "text-gray-200" : "text-gray-800"
+                                }`}
                               >
                                 {item}
                               </StyledText>
                             </StyledView>
                           ))
                         ) : (
-                          <StyledText 
-                            className={`${isDark ? "text-gray-200" : "text-gray-800"}`}
+                          <StyledText
+                            className={`${
+                              isDark ? "text-gray-200" : "text-gray-800"
+                            }`}
                           >
                             {section.content}
                           </StyledText>
@@ -374,12 +455,13 @@ export default function RecipeChatbot() {
                   </StyledText>
                 )}
                 <StyledText
-                  className={`text-xs mt-1 ${message.sender === "user"
-                    ? "text-indigo-200"
-                    : isDark
+                  className={`text-xs mt-1 ${
+                    message.sender === "user"
+                      ? "text-indigo-200"
+                      : isDark
                       ? "text-gray-500"
                       : "text-gray-500"
-                    }`}
+                  }`}
                 >
                   {formatTime(message.timestamp)}
                 </StyledText>
