@@ -18,7 +18,7 @@ export default function TabLayout() {
   const isWeb = Platform.OS === "web";
 
   // my bottom navbar on the mobile native devices.
-
+  // styling for the navbar when the button is clicked
   return (
     <Tabs
       screenOptions={{

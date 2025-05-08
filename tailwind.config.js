@@ -25,3 +25,5 @@ module.exports = {
   },
   plugins: [],
 };
+
+// This file is the configuration for Tailwind CSS

@@ -1,3 +1,6 @@
+// a modal that shows all the details of a recipe
+// includes image, ingredients, instructions, and cooking info
+// lets users save recipes and add them to shopping list
 import React from "react";
 import {
   View,
@@ -15,11 +18,13 @@ import { useSavedRecipes } from "@/src/context/SavedRecipesContext";
 import { useUserPreferences } from "@/src/context/UserPreferencesContext";
 import { LinearGradient } from "expo-linear-gradient";
 
+// styled components for better looking ui
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledScrollView = styled(ScrollView);
 
+// shape of our recipe data - everything we need to show a recipe
 interface Recipe {
   id: number;
   title: string;
@@ -29,12 +34,14 @@ interface Recipe {
   cuisines: string[];
   dishTypes: string[];
   diets: string[];
+  // list of ingredients with amounts
   extendedIngredients: {
     id: number;
     amount: number;
     unit: string;
     originalName: string;
   }[];
+  // step by step cooking instructions
   analyzedInstructions: {
     steps: {
       number: number;
@@ -44,13 +51,14 @@ interface Recipe {
   }[];
 }
 
+// what props our modal needs to work
 interface Props {
-  recipe: Recipe | null;
-  visible: boolean;
-  onClose: () => void;
-  onAddToShoppingList?: () => void;
-  isSaved?: boolean;
-  onSaveToggle?: () => void;
+  recipe: Recipe | null; // the recipe to display
+  visible: boolean; // if modal should show
+  onClose: () => void; // what to do when closing
+  onAddToShoppingList?: () => void; // optional shopping list function
+  isSaved?: boolean; // if recipe is saved (optional)
+  onSaveToggle?: () => void; // optional save toggle function
 }
 
 export default function RecipeDetailModal({
@@ -61,15 +69,18 @@ export default function RecipeDetailModal({
   isSaved: propIsSaved,
   onSaveToggle,
 }: Props) {
+  // get user preferences for dark mode
   const { preferences } = useUserPreferences();
   const isDark = preferences.isDarkMode;
+
+  // get save recipe functions from context
   const {
     isSaved: contextIsSaved,
     saveRecipe,
     removeRecipe,
   } = useSavedRecipes();
 
-  // Use props if provided, otherwise fall back to context
+  // figure out if recipe is saved - check props first, then context
   const recipeIsSaved =
     propIsSaved !== undefined
       ? propIsSaved
@@ -77,10 +88,13 @@ export default function RecipeDetailModal({
       ? contextIsSaved(recipe.id)
       : false;
 
+  // handle saving or removing recipe from saved list
   const handleSaveToggle = () => {
     if (onSaveToggle) {
+      // use prop function if provided
       onSaveToggle();
     } else if (recipe) {
+      // otherwise use context functions
       recipeIsSaved
         ? removeRecipe(recipe.id)
         : saveRecipe({
@@ -93,10 +107,11 @@ export default function RecipeDetailModal({
     }
   };
 
+  // don't render anything if no recipe
   if (!recipe) return null;
 
+  // get cooking steps or empty array if none
   const steps = recipe.analyzedInstructions[0]?.steps || [];
-  
 
   return (
     <Modal
@@ -106,18 +121,22 @@ export default function RecipeDetailModal({
       onRequestClose={onClose}
     >
       <StyledView className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}>
+        {/* recipe header with image and gradient */}
         <StyledView className="relative">
           <Image
             source={{ uri: recipe.image }}
             className="w-full h-72"
             resizeMode="cover"
           />
+          {/* dark gradient at top of image for better text visibility */}
           <LinearGradient
             colors={["rgba(0,0,0,0.6)", "transparent"]}
             className="absolute top-0 left-0 right-0 h-32"
           />
 
+          {/* floating action buttons */}
           <StyledView className="absolute top-12 right-4 z-10 flex-row">
+            {/* shopping list button - only show if function provided */}
             {onAddToShoppingList && (
               <StyledTouchableOpacity
                 className="bg-black/30 rounded-full p-3 mr-3"
@@ -126,6 +145,7 @@ export default function RecipeDetailModal({
                 <FontAwesome5 name="shopping-basket" size={20} color="white" />
               </StyledTouchableOpacity>
             )}
+            {/* save recipe button */}
             <StyledTouchableOpacity
               className="bg-black/30 rounded-full p-3 mr-3"
               onPress={handleSaveToggle}
@@ -137,6 +157,7 @@ export default function RecipeDetailModal({
                 color={recipeIsSaved ? "#FCD34D" : "white"}
               />
             </StyledTouchableOpacity>
+            {/* close modal button */}
             <StyledTouchableOpacity
               className="bg-black/30 rounded-full p-3"
               onPress={onClose}
@@ -148,6 +169,7 @@ export default function RecipeDetailModal({
 
         <StyledScrollView showsVerticalScrollIndicator={false}>
           <StyledView className="p-5">
+            {/* recipe title */}
             <StyledText
               className={`text-2xl font-bold mb-3 ${
                 isDark ? "text-white" : "text-gray-800"
@@ -156,6 +178,7 @@ export default function RecipeDetailModal({
               {recipe.title}
             </StyledText>
 
+            {/* cooking time and servings info */}
             <StyledView className="flex-row mb-6 items-center">
               {recipe.readyInMinutes && (
                 <StyledView className="flex-row items-center mr-5">
@@ -193,6 +216,7 @@ export default function RecipeDetailModal({
               )}
             </StyledView>
 
+            {/* recipe type tags */}
             <StyledView className="flex-row flex-wrap gap-2 mb-6">
               {recipe.dishTypes?.map((type, index) => (
                 <StyledView
@@ -212,6 +236,7 @@ export default function RecipeDetailModal({
               ))}
             </StyledView>
 
+            {/* ingredients section */}
             <StyledView className="mb-8">
               <StyledView className="flex-row items-center mb-4">
                 <StyledView
@@ -233,6 +258,8 @@ export default function RecipeDetailModal({
                   Ingredients
                 </StyledText>
               </StyledView>
+
+              {/* ingredients list with amounts */}
               <StyledView
                 className={`rounded-2xl p-4 ${
                   isDark ? "bg-gray-800" : "bg-white"
@@ -256,11 +283,13 @@ export default function RecipeDetailModal({
                         : ""
                     }`}
                   >
+                    {/* bullet point */}
                     <StyledView
                       className={`w-3 h-3 rounded-full mr-3 ${
                         isDark ? "bg-blue-400" : "bg-blue-500"
                       }`}
                     />
+                    {/* ingredient name */}
                     <StyledText
                       className={`flex-1 ${
                         isDark ? "text-gray-200" : "text-gray-800"
@@ -268,6 +297,7 @@ export default function RecipeDetailModal({
                     >
                       {item.originalName}
                     </StyledText>
+                    {/* amount and unit */}
                     <StyledText
                       className={`${
                         isDark ? "text-gray-400" : "text-gray-600"
@@ -280,6 +310,7 @@ export default function RecipeDetailModal({
               </StyledView>
             </StyledView>
 
+            {/* cooking instructions section */}
             <StyledView className="mb-5">
               <StyledView className="flex-row items-center mb-4">
                 <StyledView
@@ -302,6 +333,7 @@ export default function RecipeDetailModal({
                 </StyledText>
               </StyledView>
 
+              {/* numbered steps */}
               <StyledView className="space-y-4">
                 {steps.map((step) => (
                   <StyledView
@@ -318,6 +350,7 @@ export default function RecipeDetailModal({
                     }}
                   >
                     <StyledView className="flex-row">
+                      {/* step number */}
                       <StyledView
                         className={`w-8 h-8 rounded-full ${
                           isDark ? "bg-green-900/30" : "bg-green-100"
@@ -331,6 +364,7 @@ export default function RecipeDetailModal({
                           {step.number}
                         </StyledText>
                       </StyledView>
+                      {/* step instructions */}
                       <StyledText
                         className={`flex-1 ${
                           isDark ? "text-gray-200" : "text-gray-800"

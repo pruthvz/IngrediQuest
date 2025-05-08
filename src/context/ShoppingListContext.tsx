@@ -33,12 +33,12 @@ interface ShoppingListContextType {
     itemName: string,
     amount?: number,
     unit?: string
-  ) => Promise<void>;
-  toggleItem: (recipeId: number, itemId: number) => Promise<void>;
-  removeList: (recipeId: number) => Promise<void>;
-  removeItem: (recipeId: number, itemId: number) => Promise<void>;
-  clearCheckedItems: (recipeId: number) => Promise<void>;
-  isLoading: boolean;
+  ) => Promise<void>; // add item to list
+  toggleItem: (recipeId: number, itemId: number) => Promise<void>; // toggle item
+  removeList: (recipeId: number) => Promise<void>; // remove list
+  removeItem: (recipeId: number, itemId: number) => Promise<void>; // remove item
+  clearCheckedItems: (recipeId: number) => Promise<void>; // clear checked items
+  isLoading: boolean; // loading state
 }
 
 const ShoppingListContext = createContext<ShoppingListContextType | undefined>(

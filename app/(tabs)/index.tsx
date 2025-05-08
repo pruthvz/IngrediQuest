@@ -958,10 +958,6 @@ export default function HomeScreen() {
                     </StyledText>
                   </StyledView>
                 </StyledView>
-
-                <StyledTouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                  <FontAwesome5 name="bell" size={18} color="#fff" />
-                </StyledTouchableOpacity>
               </StyledView>
 
               <StyledView className="mt-10 mb-5">

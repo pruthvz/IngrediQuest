@@ -1,3 +1,17 @@
+/**
+ * MealPlanner Component
+ *
+ * A comprehensive meal planning interface that allows users to:
+ * - View and manage their weekly meal schedule
+ * - Add, edit, and delete meals
+ * - Associate recipes with meals
+ * - Save meal plans to local storage
+ * - Switch between different days of the week
+ *
+ * The component supports both web and mobile platforms with different UI layouts
+ * and includes features like dark mode support and loading states.
+ */
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -34,6 +48,7 @@ const StyledTextInput = styled(TextInput);
 
 const { width } = Dimensions.get("window");
 
+// Type definitions for data structures
 interface Recipe {
   id: string;
   name: string;
@@ -54,7 +69,7 @@ interface MealPlan {
   }[];
 }
 
-// Default meal plan data (will be used if no saved data exists)
+// Default meal plan data structure
 const defaultWeeklyPlan: MealPlan[] = [
   {
     id: "1",
@@ -121,28 +136,30 @@ const defaultWeeklyPlan: MealPlan[] = [
   },
 ];
 
+// Icons mapping for different meal types
 const mealTypeIcons = {
   breakfast: "coffee",
   lunch: "utensils",
   dinner: "moon",
 };
 
-// Storage keys
+// Storage keys for persistent data
 const MEAL_STORAGE_KEY = "@meal_planner_data";
 const RECIPE_STORAGE_KEY = "@meal_planner_recipes";
 
 export default function MealPlanner() {
+  // Context and theme hooks
   const { preferences } = useUserPreferences();
   const isDark = preferences.isDarkMode;
   const isWeb = Platform.OS === "web";
   const { isAuthenticated } = useAuth();
 
-  // State variables
+  // State management for meal planning
   const [weeklyPlan, setWeeklyPlan] = useState<MealPlan[]>(defaultWeeklyPlan);
   const [selectedDay, setSelectedDay] = useState(defaultWeeklyPlan[0].id);
   const [loading, setLoading] = useState(true);
 
-  // Recipe state
+  // Recipe management state
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [recipeModalVisible, setRecipeModalVisible] = useState(false);
   const [recipeListModalVisible, setRecipeListModalVisible] = useState(false);
@@ -183,7 +200,7 @@ export default function MealPlanner() {
     meal: { type: "breakfast", title: "", time: "" },
   });
 
-  // Load data from storage on component mount and when auth state changes
+  // Load data when component mounts or auth state changes
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
@@ -198,7 +215,10 @@ export default function MealPlanner() {
     }
   }, [isAuthenticated]);
 
-  // Function to load all data from storage
+  /**
+   * Loads all necessary data from storage
+   * Includes both meal plan and recipe data
+   */
   const loadData = async () => {
     try {
       await Promise.all([loadMealPlanData(), loadRecipeData()]);
@@ -209,7 +229,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to load meal plan data from storage
+  /**
+   * Loads meal plan data from storage
+   * Handles both web and mobile platforms
+   */
   const loadMealPlanData = async () => {
     try {
       let jsonValue;
@@ -228,7 +251,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to load recipe data from storage
+  /**
+   * Loads recipe data from storage
+   * Handles both web and mobile platforms
+   */
   const loadRecipeData = async () => {
     try {
       let jsonValue;
@@ -246,7 +272,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to save meal plan data to storage
+  /**
+   * Saves meal plan data to storage
+   * @param data The meal plan data to save
+   */
   const saveMealPlanData = async (data: MealPlan[]) => {
     try {
       const jsonValue = JSON.stringify(data);
@@ -261,7 +290,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to save recipe data to storage
+  /**
+   * Saves recipe data to storage
+   * @param data The recipe data to save
+   */
   const saveRecipeData = async (data: Recipe[]) => {
     try {
       const jsonValue = JSON.stringify(data);
@@ -276,7 +308,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to add a new meal
+  /**
+   * Initiates the process of adding a new meal
+   * Opens the meal creation modal
+   */
   const addMeal = () => {
     setCurrentMeal({
       dayId: selectedDay,
@@ -286,7 +321,11 @@ export default function MealPlanner() {
     setModalVisible(true);
   };
 
-  // Function to edit an existing meal
+  /**
+   * Initiates the process of editing an existing meal
+   * @param dayId The ID of the day containing the meal
+   * @param mealIndex The index of the meal in the day's meals array
+   */
   const editMeal = (dayId: string, mealIndex: number) => {
     const day = weeklyPlan.find((day) => day.id === dayId);
     if (day && day.meals[mealIndex]) {
@@ -299,7 +338,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to save a new meal
+  /**
+   * Saves a newly created meal to the meal plan
+   * @param meal The meal object to save
+   */
   const saveNewMeal = (meal: {
     type: "breakfast" | "lunch" | "dinner";
     title: string;
@@ -318,7 +360,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to update an existing meal
+  /**
+   * Updates an existing meal in the meal plan
+   * @param meal The updated meal object
+   */
   const updateMeal = (meal: {
     type: "breakfast" | "lunch" | "dinner";
     title: string;
@@ -343,7 +388,9 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to delete a meal
+  /**
+   * Deletes a meal from the meal plan
+   */
   const deleteMeal = () => {
     if (currentMeal.mealIndex === null) return;
 
@@ -362,7 +409,11 @@ export default function MealPlanner() {
 
   // Recipe management functions
 
-  // Function to open recipe selection or creation flow for a meal
+  /**
+   * Opens the recipe selection or creation flow for a meal
+   * @param dayId The ID of the day
+   * @param mealIndex The index of the meal
+   */
   const openRecipeModal = (dayId: string, mealIndex: number) => {
     setSelectedMealForRecipe({ dayId, mealIndex });
 
@@ -376,7 +427,10 @@ export default function MealPlanner() {
     }
   };
 
-  // Function to open create recipe modal
+  /**
+   * Opens the create recipe modal
+   * Resets the current recipe form
+   */
   const openCreateRecipeModal = () => {
     setRecipeActionMode("create");
     // Reset current recipe form
@@ -394,7 +448,10 @@ export default function MealPlanner() {
     setRecipeListModalVisible(false);
   };
 
-  // Function to select a recipe from saved recipes
+  /**
+   * Associates a recipe with a meal
+   * @param recipeId The ID of the recipe to associate
+   */
   const selectRecipeForMeal = (recipeId: string) => {
     // Associate recipe with the meal
     const updatedWeeklyPlan = [...weeklyPlan];
@@ -414,7 +471,9 @@ export default function MealPlanner() {
     Alert.alert("Success", "Recipe added to meal!");
   };
 
-  // Function to add ingredient to current recipe
+  /**
+   * Adds a new ingredient to the current recipe
+   */
   const addIngredient = () => {
     if (!newIngredient.trim()) return;
 
@@ -426,7 +485,10 @@ export default function MealPlanner() {
     setNewIngredient("");
   };
 
-  // Function to remove ingredient from current recipe
+  /**
+   * Removes an ingredient from the current recipe
+   * @param index The index of the ingredient to remove
+   */
   const removeIngredient = (index: number) => {
     const updatedIngredients = [...currentRecipe.ingredients];
     updatedIngredients.splice(index, 1);
@@ -437,7 +499,9 @@ export default function MealPlanner() {
     });
   };
 
-  // Function to save a new recipe and associate it with a meal
+  /**
+   * Saves a new recipe and associates it with a meal
+   */
   const saveRecipe = () => {
     if (
       !currentRecipe.name ||
@@ -478,19 +542,26 @@ export default function MealPlanner() {
     Alert.alert("Success", "Recipe added successfully!");
   };
 
-  // Function to view a recipe
+  /**
+   * Opens the recipe viewing modal
+   * @param recipeId The ID of the recipe to view
+   */
   const viewRecipe = (recipeId: string) => {
     setSelectedRecipeId(recipeId);
     setViewRecipeModalVisible(true);
   };
 
-  // Function to get a recipe by ID
+  /**
+   * Retrieves a recipe by its ID
+   * @param recipeId The ID of the recipe to retrieve
+   * @returns The recipe object or undefined if not found
+   */
   const getRecipeById = (recipeId: string | undefined): Recipe | undefined => {
     if (!recipeId) return undefined;
     return recipes.find((recipe) => recipe.id === recipeId);
   };
 
-  // Web version
+  // Platform-specific rendering
   if (isWeb) {
     return (
       <WebLayout title="Meal Planner" currentTab="meal-planner">
@@ -554,7 +625,7 @@ export default function MealPlanner() {
     );
   }
 
-  // Render loading indicator while data is being fetched
+  // Show loading indicator while data is being fetched
   if (loading) {
     return (
       <StyledView className="flex-1 justify-center items-center">
@@ -564,7 +635,7 @@ export default function MealPlanner() {
     );
   }
 
-  // Mobile version
+  // Mobile layout implementation
   return (
     <StyledSafeAreaView
       className={`flex-1 ${isDark ? "bg-gray-900" : "bg-gray-50"}`}

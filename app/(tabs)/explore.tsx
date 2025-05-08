@@ -791,10 +791,6 @@ export default function ExploreScreen() {
                     Discover new recipes
                   </StyledText>
                 </StyledView>
-
-                <StyledTouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
-                  <FontAwesome5 name="filter" size={16} color="#fff" />
-                </StyledTouchableOpacity>
               </StyledView>
 
               {/* Search bar */}

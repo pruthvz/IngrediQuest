@@ -29,12 +29,12 @@ interface UserPreferencesContextType {
 
 // default values for new users
 const DEFAULT_PREFERENCES: UserPreferences = {
-  isDarkMode: false,
-  dietaryPreferences: [],
-  cuisinePreferences: [],
-  cookingSkillLevel: "beginner",
-  allergies: [],
-  restrictions: [],
+  isDarkMode: false, // default to light mode
+  dietaryPreferences: [], // no dietary preferences
+  cuisinePreferences: [], // no cuisine preferences
+  cookingSkillLevel: "beginner", // beginner skill level
+  allergies: [], // no allergies
+  restrictions: [], // no restrictions
   profilePicture: "https://i.pravatar.cc/150", // Default avatar
   displayName: "",
 };

@@ -38,7 +38,10 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
-
+  // tabs include all the pages that are accessible after login
+  // auth includes login and register pages
+  // about is the about page
+  // floating chat button is the chatbot
   return (
     <AuthProvider>
       <UserPreferencesProvider>
@@ -56,6 +59,7 @@ export default function RootLayout() {
                     name="(auth)"
                     options={{ headerShown: false }}
                   />
+                  <Stack.Screen name="about" options={{ headerShown: false }} />
                 </Stack>
                 <FloatingChatButton />
               </>

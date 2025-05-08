@@ -1,3 +1,18 @@
+/**
+ * ProfileScreen Component
+ *
+ * A user profile interface that provides:
+ * - User information display and management
+ * - Profile picture management with camera/gallery options
+ * - App settings and preferences
+ * - Navigation to other app features
+ * - Theme switching (dark/light mode)
+ * - Authentication management (logout)
+ *
+ * The component supports both web and mobile platforms with different UI layouts
+ * and includes features like dark mode support and image picking capabilities.
+ */
+
 // this screen shows user profile info and settings
 import React, { useState, useEffect } from "react";
 import {
@@ -54,7 +69,13 @@ interface SettingItemProps {
   isDark: boolean;
 }
 
-// reusable component for settings menu items
+/**
+ * SettingItem Component
+ *
+ * A reusable component for rendering individual settings menu items
+ * with consistent styling and interaction handling.
+ *
+ */
 const SettingItem = ({
   icon,
   title,

@@ -8,6 +8,8 @@ import { useUserPreferences } from "../../src/context/UserPreferencesContext";
 
 const StyledView = styled(View);
 
+// separate chatbot page for web and mobile, the working chatbot is the modal.
+
 export default function ChatbotScreen() {
   const { preferences } = useUserPreferences();
   const isDark = preferences.isDarkMode;

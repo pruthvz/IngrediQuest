@@ -1,3 +1,5 @@
+// floating chat button that opens an ai assistant chat modal
+// shows in bottom right corner for quick access to help
 import React, { useState } from "react";
 import {
   View,
@@ -14,28 +16,34 @@ import RecipeChatbot from "./RecipeChatbot";
 import { useAuth } from "../context/AuthContext";
 import { useUserPreferences } from "../context/UserPreferencesContext";
 
+// styled components for consistent look
 const StyledView = styled(View);
 const StyledText = styled(Text);
 
+// get screen height for modal sizing
 const windowHeight = Dimensions.get("window").height;
 
 export default function FloatingChatButton() {
+  // track if chat modal is open
   const [isChatOpen, setIsChatOpen] = useState(false);
+  // track hover state for web interactions
   const [isHovered, setIsHovered] = useState(false);
   const { isAuthenticated } = useAuth();
   const { preferences } = useUserPreferences();
   const isDark = preferences.isDarkMode;
 
+  // only show button when user is logged in
   if (!isAuthenticated) {
     return null;
   }
 
+  // styles for the button and modal
   const styles = StyleSheet.create({
     container: {
       position: "absolute",
-      bottom: 32,
+      bottom: 90,
       right: 32,
-      zIndex: 50,
+      zIndex: 50, // make sure button stays on top
     },
     button: {
       width: 60,
@@ -44,6 +52,7 @@ export default function FloatingChatButton() {
       backgroundColor: isDark ? "#4F46E5" : "#6366F1",
       alignItems: "center",
       justifyContent: "center",
+      // special styles for web - hover effects and shadows
       ...(Platform.OS === "web"
         ? {
             cursor: "pointer",
@@ -56,6 +65,7 @@ export default function FloatingChatButton() {
               : "0 4px 20px rgba(99, 102, 241, 0.3), 0 0 0 2px rgba(99, 102, 241, 0.1)",
           }
         : {
+            // mobile shadow styles
             elevation: 8,
             shadowColor: isDark ? "#4F46E5" : "#6366F1",
             shadowOffset: { width: 0, height: 4 },
@@ -66,6 +76,7 @@ export default function FloatingChatButton() {
     iconContainer: {
       alignItems: "center",
       justifyContent: "center",
+      // animate icon on web hover
       ...(Platform.OS === "web"
         ? {
             transform: isHovered ? "scale(1.1)" : "scale(1)",
@@ -73,6 +84,7 @@ export default function FloatingChatButton() {
           }
         : {}),
     },
+    // tooltip only shows on web
     tooltip:
       Platform.OS === "web"
         ? {

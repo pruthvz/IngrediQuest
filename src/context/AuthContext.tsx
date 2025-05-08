@@ -26,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // handles storage operations for both web and mobile
 const safeStorage = {
   getItem: async (key: string): Promise<string | null> => {
+    // get item from storage
     try {
       if (Platform.OS === "web") {
         return localStorage.getItem(key);
@@ -37,6 +38,7 @@ const safeStorage = {
     }
   },
   setItem: async (key: string, value: string): Promise<void> => {
+    // set item in storage
     try {
       if (Platform.OS === "web") {
         localStorage.setItem(key, value);
@@ -48,6 +50,7 @@ const safeStorage = {
     }
   },
   removeItem: async (key: string): Promise<void> => {
+    // remove item from storage
     try {
       if (Platform.OS === "web") {
         localStorage.removeItem(key);
@@ -82,10 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If no profile exists, create one
       if (error && error.code === "PGRST116") {
-        const { data: userData } = await supabase.auth.getUser();
-        const userEmail = userData.user?.email;
+        const { data: userData } = await supabase.auth.getUser(); // get user data
+        const userEmail = userData.user?.email; // get user email
         const userName =
-          userData.user?.user_metadata?.name || userEmail?.split("@")[0];
+          userData.user?.user_metadata?.name || userEmail?.split("@")[0]; // get user name
 
         const { data: newProfile, error: upsertError } = await supabase
           .from("profiles")
@@ -93,15 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: userId,
             name: userName,
             email: userEmail,
-            updated_at: new Date(),
+            updated_at: new Date(), // update the profile
           })
           .select("name")
           .single();
 
-        if (upsertError) throw upsertError;
-        data = newProfile;
+        if (upsertError) throw upsertError; // throw error if there is one
+        data = newProfile; // set the new profile
       } else if (error) {
-        throw error;
+        throw error; // throw error if there is one
       }
 
       setUsername(data?.name || null);
@@ -142,13 +145,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // If no active session, check for stored authentication state
         if (Platform.OS === "web") {
           const isAuthenticatedInStorage =
-            localStorage.getItem("isAuthenticated");
+            localStorage.getItem("isAuthenticated"); // get authentication state from storage
           if (isAuthenticatedInStorage === "true") {
             console.log(
               "Found authentication state in storage, trying to refresh session"
             );
             // Try to refresh the session
-            const { data, error } = await supabase.auth.refreshSession();
+            const { data, error } = await supabase.auth.refreshSession(); // refresh the session
             if (data.session) {
               setSession(data.session);
               setIsAuthenticated(true);
@@ -187,21 +190,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } catch (e) {
-            console.error("Error parsing stored session:", e);
+            console.error("Error parsing stored session:", e); // error parsing stored session
           }
         }
 
         // If we get here, user is not authenticated
-        console.log("No valid session found, user is not authenticated");
+        console.log("No valid session found, user is not authenticated"); // no valid session found, user is not authenticated
         setIsAuthenticated(false);
         setSession(null);
         setUsername(null);
         setEmail(null);
 
         // Redirect to login page
-        router.replace("/login");
+        router.replace("/login"); // redirect to login page
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        console.error("Error initializing auth:", error); // error initializing auth
         setIsAuthenticated(false);
         router.replace("/login");
       } finally {
@@ -209,19 +212,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    initializeAuth();
+    initializeAuth(); // initialize auth
 
     // Set up auth state change listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed:", event); // auth state changed
 
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        setSession(session);
-        setIsAuthenticated(true);
+        setSession(session); // set the session
+        setIsAuthenticated(true); // set the authenticated state
         if (session?.user) {
-          await updateUsername(session.user.id);
+          await updateUsername(session.user.id); // update the username
           // Store authentication state in localStorage for web
           if (Platform.OS === "web") {
             localStorage.setItem("isAuthenticated", "true");
@@ -253,24 +256,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      });
+      }); // login with email and password
 
       if (error) {
-        setError(error.message);
+        setError(error.message); // set the error message
         return;
       }
 
       if (data.user) {
-        await updateUsername(data.user.id);
-        setEmail(data.user.email || null);
-        setIsAuthenticated(true);
+        await updateUsername(data.user.id); // update the username
+        setEmail(data.user.email || null); // set the email
+        setIsAuthenticated(true); // set the authenticated state
         // Store authentication state in localStorage for web
         if (Platform.OS === "web") {
           localStorage.setItem("isAuthenticated", "true");
         }
-        router.replace("/(tabs)");
+        router.replace("/(tabs)"); // redirect to the tabs page
       } else {
-        setError("Login failed. Please try again.");
+        setError("Login failed. Please try again."); // login failed
       }
     } catch (error: any) {
       setError(error.message || "An unexpected error occurred");
@@ -294,9 +297,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             name,
           },
         },
-      });
+      }); // register with email and password
 
-      if (error) throw error;
+      if (error) throw error; // throw error if there is one
 
       if (data.user) {
         const { error: profileError } = await supabase.from("profiles").upsert({
@@ -304,21 +307,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name,
           email,
           updated_at: new Date(),
-        });
+        }); // upsert the profile
 
-        if (profileError) throw profileError;
-        setUsername(name);
-        setEmail(email);
-        await safeStorage.setItem("username", name);
-        setIsAuthenticated(true);
+        if (profileError) throw profileError; // throw error if there is one
+        setUsername(name); // set the username
+        setEmail(email); // set the email
+        await safeStorage.setItem("username", name); // store the username in storage
+        setIsAuthenticated(true); // set the authenticated state
       }
 
-      router.replace("/(tabs)");
+      router.replace("/(tabs)"); // redirect to the tabs page
     } catch (error: any) {
-      setError(error.message);
-      console.error("Error registering:", error.message);
+      setError(error.message); // set the error message
+      console.error("Error registering:", error.message); // error registering
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // set the loading state
     }
   };
 
@@ -327,19 +330,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      setUsername(null);
-      setIsAuthenticated(false);
-      await safeStorage.removeItem("username");
+      const { error } = await supabase.auth.signOut(); // sign out the user
+      if (error) throw error; // throw error if there is one
+      setUsername(null); // set the username to null
+      setIsAuthenticated(false); // set the authenticated state to false
+      await safeStorage.removeItem("username"); // remove the username from storage
       // Clear authentication state from localStorage
       if (Platform.OS === "web") {
         localStorage.removeItem("isAuthenticated");
       }
-      router.replace("/login");
+      router.replace("/login"); // redirect to the login page
     } catch (error: any) {
-      setError(error.message);
-      console.error("Error logging out:", error.message);
+      setError(error.message); // set the error message
+      console.error("Error logging out:", error.message); // error logging out
     } finally {
       setIsLoading(false);
     }
@@ -360,7 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </AuthContext.Provider>
+    </AuthContext.Provider> // provider component
   );
 }
 

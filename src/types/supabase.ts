@@ -1,3 +1,4 @@
+// This file defines the types for the database tables
 export type Database = {
   public: {
     Tables: {
